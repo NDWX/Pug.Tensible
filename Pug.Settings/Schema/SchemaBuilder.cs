@@ -20,11 +20,24 @@ namespace Settings.Schema
 
 		public ISchemaBuilder RegisterPurpose(string name, string description)
 		{
+			#region input validation
+			
 			if(string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
 
-			if(description == null) throw new ArgumentNullException(nameof(description));
+			#endregion
+			
+			#region input clean-up
+			
+			name = name.Trim();
+			
+			if(description == null) 
+				description = string.Empty;
+			else 
+				description = description.Trim();
 
+			#endregion
+			
 			if(purposes.ContainsKey(name))
 				throw new DuplicateNameException();
 
@@ -36,21 +49,42 @@ namespace Settings.Schema
 		public ISchemaBuilder RegisterEntityType(string name, string description,
 												IDictionary<string, IEnumerable<SettingDefinition>> purposes)
 		{
+			#region input validation
+			
 			if(string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
 
-			if(description == null) throw new ArgumentNullException(nameof(description));
+			#endregion
+			
+			#region input clean-up
+			
+			name = name.Trim();
 
+			if(description == null)
+				description = string.Empty;
+			else 
+				description = description.Trim();
+
+			#endregion
+			
 			if(entityTypes.ContainsKey(name))
 				throw new DuplicateNameException();
 
+			IDictionary<string, EntityTypePurpose> entityTypePurposes = new Dictionary<string, EntityTypePurpose>();
+
 			foreach(KeyValuePair<string, IEnumerable<SettingDefinition>> purpose in purposes)
 			{
-				if(!this.purposes.ContainsKey(purpose.Key))
-					throw new UnknownPurpose(purpose.Key);
+				string purposeKey = purpose.Key.Trim();
+				
+				if( entityTypePurposes.ContainsKey(purposeKey))
+					throw new DuplicateNameException($"Duplicate purpose name '{purposeKey}' specified for entity type");
+				
+				if(!this.purposes.ContainsKey(purposeKey))
+					throw new UnknownPurpose(purposeKey);
 
 				IEnumerable<SettingDefinition> purposeSettings = purpose.Value;
 
+				// determine duplicated setting names in 'purpose'
 				IEnumerable<IGrouping<string, SettingDefinition>> duplicatedNames =
 					from settingDefinition in purposeSettings
 					group settingDefinition by settingDefinition.Name
@@ -58,18 +92,27 @@ namespace Settings.Schema
 					where nameDefinitions.Count() > 1
 					select nameDefinitions;
 
-				if(duplicatedNames.Count() > 0)
+				if(duplicatedNames.Any())
 					throw new DuplicateNameException(duplicatedNames.First().Key);
+
+				entityTypePurposes.Add(purposeKey,
+										new EntityTypePurpose(purposeKey, purpose.Value.ToDictionary(x => x.Name)));
 			}
 
-			entityTypes.Add(name, new EntityTypeSchema(new EntityTypeInfo(name, description), this.purposes, purposes));
+			entityTypes.Add(
+				name, new EntityTypeSchema(new EntityTypeInfo(name, description), this.purposes, entityTypePurposes));
 
 			return this;
 		}
 
+		public ISettingsSchema Build()
+		{
+			return new SettingsSchema(purposes, entityTypes);
+		}
+
 		#endregion
 
-		private bool PurposeExsists(string name)
+		private bool PurposeExists(string name)
 		{
 			return purposes.ContainsKey(name);
 		}
@@ -77,11 +120,6 @@ namespace Settings.Schema
 		private bool EntityExists(string name)
 		{
 			return entityTypes.ContainsKey(name);
-		}
-
-		public ISettingsSchema Build()
-		{
-			return new SettingsSchema(purposes, entityTypes);
 		}
 	}
 }

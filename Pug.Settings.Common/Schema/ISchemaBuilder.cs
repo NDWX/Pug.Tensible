@@ -8,5 +8,7 @@ namespace Settings.Schema
 
 		ISchemaBuilder RegisterEntityType(string name, string description,
 										IDictionary<string, IEnumerable<SettingDefinition>> purposes);
+
+		ISettingsSchema Build();
 	}
 }

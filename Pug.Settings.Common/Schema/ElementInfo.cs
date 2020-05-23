@@ -4,7 +4,7 @@
 	{
 		public ElementInfo(string name, string description)
 		{
-			Name = description;
+			Name = name;
 			Description = description;
 		}
 

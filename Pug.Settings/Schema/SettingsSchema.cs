@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Settings.Schema
@@ -17,7 +18,7 @@ namespace Settings.Schema
 
 		#region ISettingsSchema Members
 
-		public IEnumerable<EntityTypeInfo> GetEntityTypes(string parent)
+		public IEnumerable<EntityTypeInfo> GetEntityTypes()
 		{
 			return _entityTypes.Values.Select(x => x.Info);
 		}
@@ -29,6 +30,11 @@ namespace Settings.Schema
 
 		public IEntityType GetEntityType(string name)
 		{
+			if(string.IsNullOrWhiteSpace(name))
+				throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
+			
+			name = name.Trim();
+			
 			if(!_entityTypes.ContainsKey(name))
 				return null;
 

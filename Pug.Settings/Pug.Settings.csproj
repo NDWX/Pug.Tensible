@@ -18,4 +18,12 @@
 	  <Folder Include="Common" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Pug.Settings.Common\Pug.Settings.Common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="EntitySetting.cs" />
+	</ItemGroup>
+
 </Project>

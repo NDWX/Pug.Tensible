@@ -4,7 +4,7 @@ namespace Settings.Schema
 {
 	public interface ISettingsSchema
 	{
-		IEnumerable<EntityTypeInfo> GetEntityTypes(string parent);
+		IEnumerable<EntityTypeInfo> GetEntityTypes();
 
 		IEnumerable<PurposeInfo> GetPurposes();
 
