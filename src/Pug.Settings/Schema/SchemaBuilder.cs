@@ -76,7 +76,7 @@ namespace Settings.Schema
 			{
 				string purposeKey = purpose.Key.Trim();
 				
-				if( entityTypePurposes.ContainsKey(purposeKey))
+				if( purposeKey != string.Empty && entityTypePurposes.ContainsKey(purposeKey))
 					throw new DuplicateNameException($"Duplicate purpose name '{purposeKey}' specified for entity type");
 				
 				if(!this.purposes.ContainsKey(purposeKey))

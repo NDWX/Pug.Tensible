@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using Settings;
@@ -177,6 +178,13 @@ namespace UnitTests
 			Assert.NotNull(setting);
 			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.User);
 			Assert.Equal(setting.Value, "Test Value");
+		}
+
+		[Fact]
+		[Order(60)]
+		public void PurposeLevelSettingsResolutionBehaviousShouldBeConsistentWithSettingLevelResolution()
+		{
+			throw new NotImplementedException();
 		}
 
 		[Fact]

@@ -1,4 +1,5 @@
-﻿using Settings;
+﻿using System.Collections.Generic;
+using Settings;
 
 namespace UnitTests
 {
@@ -53,6 +54,11 @@ namespace UnitTests
 			}
 
 			return setting;
+		}
+
+		public IEnumerable<Setting> GetSettings(EntityIdentifier entity, string purpose)
+		{
+			throw new System.NotImplementedException();
 		}
 
 		#endregion
