@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pug.Settings", "Pug.Settings\Pug.Settings.csproj", "{4BC5B081-8A34-4D57-A872-817D14628749}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pug.Settings", "src\Pug.Settings\Pug.Settings.csproj", "{4BC5B081-8A34-4D57-A872-817D14628749}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{A3634D50-D2C4-4D9D-B782-31623B8FF0B3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "src\UnitTests\UnitTests.csproj", "{A3634D50-D2C4-4D9D-B782-31623B8FF0B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pug.Settings.Common", "Pug.Settings.Common\Pug.Settings.Common.csproj", "{86929C06-4ADA-4440-AEC1-87969A845E67}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pug.Settings.Common", "src\Pug.Settings.Common\Pug.Settings.Common.csproj", "{86929C06-4ADA-4440-AEC1-87969A845E67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
