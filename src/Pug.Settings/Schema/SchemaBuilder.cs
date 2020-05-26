@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace Settings.Schema
 {
+	/// <summary>
+	/// Provide and implementation of <see cref="ISchemaBuilder">ISchemaBuilder</see> interface
+	/// </summary>
 	public class SchemaBuilder : ISchemaBuilder
 	{
 		private readonly Dictionary<string, EntityTypeSchema> entityTypes;
@@ -18,6 +21,14 @@ namespace Settings.Schema
 
 		#region ISchemaBuilder Members
 
+		/// <summary>
+		/// Register a setting purpose
+		/// </summary>
+		/// <param name="name">Name of the purpose</param>
+		/// <param name="description">Description of purpose</param>
+		/// <returns>The same instance of this class</returns>
+		/// <exception cref="ArgumentException">Name or description is null or empty</exception>
+		/// <exception cref="DuplicateNameException">Name of purpose has already been used by another purpose</exception>
 		public ISchemaBuilder RegisterPurpose(string name, string description)
 		{
 			#region input validation
@@ -46,6 +57,16 @@ namespace Settings.Schema
 			return this;
 		}
 
+		/// <summary>
+		/// Register an entity type with all its purposes and settings
+		/// </summary>
+		/// <param name="name">Name of entity type</param>
+		/// <param name="description">Description of entity type</param>
+		/// <param name="purposes">Settings purposes</param>
+		/// <returns>The same instance of this class</returns>
+		/// <exception cref="ArgumentException"></exception>
+		/// <exception cref="DuplicateNameException">Entity, or purpose within entity or setting within a purpose is duplicated</exception>
+		/// <exception cref="UnknownPurpose">Purpose has not been pre-registered using <see cref="RegisterPurpose">RegisterPurpose</see></exception>
 		public ISchemaBuilder RegisterEntityType(string name, string description,
 												IDictionary<string, IEnumerable<SettingDefinition>> purposes)
 		{
@@ -105,6 +126,10 @@ namespace Settings.Schema
 			return this;
 		}
 
+		/// <summary>
+		/// Builds and return settings schema
+		/// </summary>
+		/// <returns>An instance of <see cref="ISettingsSchema">ISettingSchema</see> which represents the overall settings schema</returns>
 		public ISettingsSchema Build()
 		{
 			return new SettingsSchema(purposes, entityTypes);
