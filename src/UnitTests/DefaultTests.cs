@@ -1,14 +1,16 @@
-using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using Settings;
 using Settings.Schema;
 using Xunit;
 using Xunit.Extensions.Ordering;
+// ReSharper disable HeapView.ClosureAllocation
 
 namespace UnitTests
 {
 	[TestCaseOrderer("Xunit.Extensions.Ordering.TestCaseOrderer", "Xunit.Extensions.Ordering")]
+	[SuppressMessage("ReSharper", "HeapView.DelegateAllocation")]
 	public class DefaultTests : IClassFixture<TestContext>
 	{
 		#region Setup/Teardown
@@ -184,7 +186,20 @@ namespace UnitTests
 		[Order(60)]
 		public void PurposeLevelSettingsResolutionBehaviousShouldBeConsistentWithSettingLevelResolution()
 		{
-			throw new NotImplementedException();
+			IDictionary<string, Setting> settings = context.Resolver.ResolveSettings(
+				new EntityIdentifier
+					{Identifier = "FirstEntity", Type = "FirstType"},
+				"Purpose1");
+
+			Assert.True(settings.ContainsKey("Setting1"));
+			Setting setting = settings["Setting1"];
+			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.User);
+			Assert.Equal(setting.Value, "Test Value");
+			
+			Assert.True(settings.ContainsKey("Setting2"));
+			setting = settings["Setting2"];
+			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.Default);
+			Assert.Equal("NewDefaultValue", setting.Value);
 		}
 
 		[Fact]

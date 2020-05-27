@@ -23,7 +23,7 @@ namespace Settings.Schema
 		/// Get entity type by name
 		/// </summary>
 		/// <param name="name"></param>
-		/// <returns>An instance of <see cref="IEntityType">IEntityType<see> or null</returns>
+		/// <returns>An instance of <see ref="IEntityType">IEntityType</see> or null</returns>
 		IEntityType GetEntityType(string name);
 	}
 }

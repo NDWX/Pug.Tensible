@@ -62,13 +62,13 @@ namespace Settings.Schema
 		/// </summary>
 		/// <param name="name">Name of entity type</param>
 		/// <param name="description">Description of entity type</param>
-		/// <param name="purposes">Settings purposes</param>
+		/// <param name="purposeSettings">Entity purposes and settings</param>
 		/// <returns>The same instance of this class</returns>
 		/// <exception cref="ArgumentException"></exception>
 		/// <exception cref="DuplicateNameException">Entity, or purpose within entity or setting within a purpose is duplicated</exception>
 		/// <exception cref="UnknownPurpose">Purpose has not been pre-registered using <see cref="RegisterPurpose">RegisterPurpose</see></exception>
 		public ISchemaBuilder RegisterEntityType(string name, string description,
-												IDictionary<string, IEnumerable<SettingDefinition>> purposes)
+												IDictionary<string, IEnumerable<SettingDefinition>> purposeSettings)
 		{
 			#region input validation
 			
@@ -93,7 +93,7 @@ namespace Settings.Schema
 
 			IDictionary<string, EntityTypePurpose> entityTypePurposes = new Dictionary<string, EntityTypePurpose>();
 
-			foreach(KeyValuePair<string, IEnumerable<SettingDefinition>> purpose in purposes)
+			foreach(KeyValuePair<string, IEnumerable<SettingDefinition>> purpose in purposeSettings)
 			{
 				string purposeKey = purpose.Key.Trim();
 				
@@ -103,11 +103,11 @@ namespace Settings.Schema
 				if(!this.purposes.ContainsKey(purposeKey))
 					throw new UnknownPurpose(purposeKey);
 
-				IEnumerable<SettingDefinition> purposeSettings = purpose.Value;
+				IEnumerable<SettingDefinition> settingDefinitions = purpose.Value;
 
 				// determine duplicated setting names in 'purpose'
 				IEnumerable<IGrouping<string, SettingDefinition>> duplicatedNames =
-					from settingDefinition in purposeSettings
+					from settingDefinition in settingDefinitions
 					group settingDefinition by settingDefinition.Name
 					into nameDefinitions
 					where nameDefinitions.Count() > 1

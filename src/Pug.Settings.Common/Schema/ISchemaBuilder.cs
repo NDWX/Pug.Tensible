@@ -19,13 +19,13 @@ namespace Settings.Schema
 		/// </summary>
 		/// <param name="name">Name of entity type</param>
 		/// <param name="description">Description of entity type</param>
-		/// <param name="purposes">Settings purposes</param>
+		/// <param name="purposeSettings">Entity purposes and settings</param>
 		/// <returns>The same instance of a schema builder</returns>
 		/// <exception cref="ArgumentException"></exception>
 		/// <exception cref="DuplicateNameException">Entity, or purpose within entity or setting within a purpose is duplicated</exception>
 		/// <exception cref="UnknownPurpose">Purpose has not been pre-registered using <see cref="RegisterPurpose">RegisterPurpose</see></exception>
 		ISchemaBuilder RegisterEntityType(string name, string description,
-										IDictionary<string, IEnumerable<SettingDefinition>> purposes);
+										IDictionary<string, IEnumerable<SettingDefinition>> purposeSettings);
 
 		/// <summary>
 		///Implementation must return final overall settings schema

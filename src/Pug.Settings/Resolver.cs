@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Settings.Schema
@@ -19,14 +20,17 @@ namespace Settings.Schema
 			_settingStore = settingStore;
 		}
 		
+		[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
 		private static void ValidateEntityIdentifier(EntityIdentifier entity)
 		{
 			if(entity == null) throw new ArgumentNullException(nameof(entity));
 
 			if(string.IsNullOrWhiteSpace(entity.Type))
+				// ReSharper disable once NotResolvedInText
 				throw new ArgumentException("Value cannot be null or whitespace.", "entity.Type");
 
 			if(string.IsNullOrWhiteSpace(entity.Identifier))
+				// ReSharper disable once NotResolvedInText
 				throw new ArgumentException("Value cannot be null or whitespace.", "entity.Identifier");
 		}
 		

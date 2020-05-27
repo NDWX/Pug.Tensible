@@ -54,6 +54,7 @@ Setting setting = resolver.ResolveSetting(
 The example above will return setting value for *user* 'John' if exists in *settingStore*, otherwise the default value 'Light'.
 
 ### Planned Features
+- User specified setting _default_ value
 - Settings inheritance by **Purpose**
 - Reference implementations of **ISettingsStore**
 - Schema definition through configuration file

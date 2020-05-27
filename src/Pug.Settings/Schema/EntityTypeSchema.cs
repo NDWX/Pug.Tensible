@@ -32,6 +32,7 @@ namespace Settings.Schema
 		public IEnumerable<PurposeInfo> GetPurposes()
 		{
 			return from purposeInfo in _purposeInfos
+					// ReSharper disable once HeapView.DelegateAllocation
 					where Purposes.ContainsKey(purposeInfo.Key)
 					select purposeInfo.Value;
 		}

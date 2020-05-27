@@ -58,7 +58,29 @@ namespace UnitTests
 
 		public IEnumerable<Setting> GetSettings(EntityIdentifier entity, string purpose)
 		{
-			throw new System.NotImplementedException();
+			return new[]
+			{
+				new Setting
+				{
+					Name = "Setting1",
+					Purpose = purpose,
+					ValueSource = new SettingValueSource
+					{
+						Type = SettingValueSourceType.User
+					},
+					Value = "Test Value"
+				},
+				new Setting
+				{
+					Name = "Setting2",
+					Purpose = purpose,
+					ValueSource = new SettingValueSource
+					{
+						Type = SettingValueSourceType.Default
+					},
+					Value = "Old Default Value"
+				}
+			};
 		}
 
 		#endregion
