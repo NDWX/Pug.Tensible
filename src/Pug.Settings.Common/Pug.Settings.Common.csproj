@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<PackageVersion>1.0.0-b01</PackageVersion>
+		<PackageVersion>1.0.0-beta.1</PackageVersion>
 		<Title>Pug.Settings.Common</Title>
 		<Description>Settings Common Types</Description>
 		<AssemblyVersion>0.1.00</AssemblyVersion>
