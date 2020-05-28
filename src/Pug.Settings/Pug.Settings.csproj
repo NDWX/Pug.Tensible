@@ -13,6 +13,12 @@
 		<AssemblyVersion>0.1.0</AssemblyVersion>
 		<FileVersion>0.1.0</FileVersion>
 		<NeutralLanguage>en</NeutralLanguage>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Description>Simplify settings management and consumption in your application by declaring rules and intentions around settings within your application.</Description>
+		<PackageProjectUrl>https://github.com/NDWX/Pug.Settings</PackageProjectUrl>
+		<PackageLicenseUrl>https://www.gnu.org/licenses/agpl-3.0.txt</PackageLicenseUrl>
+		<RepositoryUrl>https://github.com/NDWX/Pug.Settings</RepositoryUrl>
+		<RepositoryType>Git</RepositoryType>
 	</PropertyGroup>
 
 	<ItemGroup>
