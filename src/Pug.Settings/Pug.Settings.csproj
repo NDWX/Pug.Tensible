@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<AssemblyName>Pug.Settings</AssemblyName>
 		<RootNamespace>Pug.Settings</RootNamespace>
-		<PackageVersion>0.1.0</PackageVersion>
+		<PackageVersion>1.0.0-b01</PackageVersion>
 		<Title>Settings</Title>
 		<Authors>Andrian</Authors>
 		<PackageTags>Settings Resolver Defaults</PackageTags>
