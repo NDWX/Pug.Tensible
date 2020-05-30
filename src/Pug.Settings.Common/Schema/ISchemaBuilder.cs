@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Settings.Schema
 {
@@ -25,7 +26,7 @@ namespace Settings.Schema
 		/// <exception cref="DuplicateNameException">Entity, or purpose within entity or setting within a purpose is duplicated</exception>
 		/// <exception cref="UnknownPurpose">Purpose has not been pre-registered using <see cref="RegisterPurpose">RegisterPurpose</see></exception>
 		ISchemaBuilder RegisterEntityType(string name, string description,
-										IDictionary<string, IEnumerable<SettingDefinition>> purposeSettings);
+										IEnumerable<EntityPurposeDefinition> purposes);
 
 		/// <summary>
 		///Implementation must return final overall settings schema

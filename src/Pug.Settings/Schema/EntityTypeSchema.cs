@@ -7,10 +7,10 @@ namespace Settings.Schema
 	internal class EntityTypeSchema : IEntityType
 	{
 		private readonly IDictionary<string, PurposeInfo> _purposeInfos;
-		private readonly IDictionary<string, EntityTypePurpose> purposes;
+		private readonly IDictionary<string, EntityPurposeSchema> purposes;
 
 		public EntityTypeSchema(EntityTypeInfo info, IDictionary<string, PurposeInfo> purposeInfos,
-								IDictionary<string, EntityTypePurpose> purposes)
+								IDictionary<string, EntityPurposeSchema> purposes)
 		{
 			_purposeInfos = purposeInfos;
 			Info = info;
@@ -19,8 +19,8 @@ namespace Settings.Schema
 
 		public EntityTypeInfo Info { get; }
 
-		public IDictionary<string, EntityTypePurpose> Purposes =>
-			new ReadOnlyDictionary<string, EntityTypePurpose>(purposes);
+		public IDictionary<string, EntityPurposeSchema> Purposes =>
+			new ReadOnlyDictionary<string, EntityPurposeSchema>(purposes);
 
 		#region IEntityType Members
 
@@ -37,12 +37,19 @@ namespace Settings.Schema
 					select purposeInfo.Value;
 		}
 
-		public IEnumerable<SettingDefinition> GetSettings(string purpose = "", string name = null)
+		public EntityPurposeSchema GetPurpose(string name)
 		{
-			if(purpose == null)
-				purpose = string.Empty;
-			else
-				purpose = purpose.Trim();
+			name = name?.Trim() ?? string.Empty;
+
+			if(!purposes.ContainsKey(name))
+				return null;
+			
+			return purposes[name];
+		}
+
+		public IEnumerable<ISettingSchema> GetSettings(string purpose = "", string name = null)
+		{
+			purpose = purpose?.Trim() ?? string.Empty;
 
 			if(name != null)
 				name = name.Trim();
@@ -50,12 +57,12 @@ namespace Settings.Schema
 			if(purposes.ContainsKey(purpose))
 			{
 				if(!string.IsNullOrWhiteSpace(name))
-					return new[] {purposes[purpose].GetSetting(name.Trim())};
+					return new[] {purposes[purpose].Settings[name.Trim()]};
 
-				return purposes[purpose].GetSettings();
+				return purposes[purpose].Settings.Values;
 			}
 
-			return new SettingDefinition[0];
+			return new SettingSchema[0];
 		}
 
 		#endregion

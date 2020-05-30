@@ -52,7 +52,7 @@ namespace Settings.Schema
 			if(purposes.ContainsKey(name))
 				throw new DuplicateNameException();
 
-			purposes.Add(name, new PurposeInfo(name, description, Inheritability.None, false));
+			purposes.Add(name, new PurposeInfo(name, description));
 
 			return this;
 		}
@@ -68,46 +68,75 @@ namespace Settings.Schema
 		/// <exception cref="DuplicateNameException">Entity, or purpose within entity or setting within a purpose is duplicated</exception>
 		/// <exception cref="UnknownPurpose">Purpose has not been pre-registered using <see cref="RegisterPurpose">RegisterPurpose</see></exception>
 		public ISchemaBuilder RegisterEntityType(string name, string description,
-												IDictionary<string, IEnumerable<SettingDefinition>> purposeSettings)
+												IEnumerable<EntityPurposeDefinition> purposes)
 		{
 			#region input validation
-			
+
 			if(string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
 
 			#endregion
-			
+
 			#region input clean-up
-			
+
 			name = name.Trim();
 
 			if(description == null)
 				description = string.Empty;
-			else 
+			else
 				description = description.Trim();
 
 			#endregion
-			
+
 			if(entityTypes.ContainsKey(name))
 				throw new DuplicateNameException();
 
-			IDictionary<string, EntityTypePurpose> entityTypePurposes = new Dictionary<string, EntityTypePurpose>();
+			IDictionary<string, EntityPurposeSchema> entityTypePurposes =
+				new Dictionary<string, EntityPurposeSchema>(purposes.Count());
 
-			foreach(KeyValuePair<string, IEnumerable<SettingDefinition>> purpose in purposeSettings)
+			foreach(EntityPurposeDefinition purposeDefinition in purposes)
 			{
-				string purposeKey = purpose.Key.Trim();
-				
-				if( purposeKey != string.Empty && entityTypePurposes.ContainsKey(purposeKey))
-					throw new DuplicateNameException($"Duplicate purpose name '{purposeKey}' specified for entity type");
-				
+				string purposeKey = purposeDefinition.Name;
+
+				if(purposeKey != string.Empty && entityTypePurposes.ContainsKey(purposeKey))
+					throw new DuplicateNameException(
+						$"Duplicate purpose name '{purposeKey}' specified for entity type");
+
+				// ensure purpose info exists
 				if(!this.purposes.ContainsKey(purposeKey))
 					throw new UnknownPurpose(purposeKey);
 
-				IEnumerable<SettingDefinition> settingDefinitions = purpose.Value;
+				EntityTypeSchema parentSchema = null;
+				DefinitionSource parentDefinitionSource = null;
+
+				// check parent entity type and purpose inheritability
+				if(!string.IsNullOrWhiteSpace(purposeDefinition.ParentEntityType))
+				{
+					// ensure parent entity type is known
+					if(!entityTypes.ContainsKey(purposeDefinition.ParentEntityType))
+						throw new UnknownEntityType(purposeDefinition.ParentEntityType);
+
+					// get parent entity type schema
+					parentSchema = entityTypes[purposeDefinition.ParentEntityType];
+
+					EntityPurposeSchema parentPurpose = parentSchema.GetPurpose(purposeDefinition.Name);
+					
+					// check purpose exists in parent entity type
+					if( parentPurpose == null )
+						throw new UnknownPurpose(purposeDefinition.Name, $"Parent entity type '{parentSchema.Info.Name}' does not have purpose '{purposeDefinition.Name}'");
+
+					// check parent entity type purpose is inheritable
+					if(parentPurpose.Definition.Inheritability == Inheritability.NotInheritable)
+						throw new NotInheritable("Purpose '{purposeDefinition.Name}' of entity type '{parentSchema.Info.Name}' is not inheritable");
+
+					// define reusable setting 'parent' source
+					parentDefinitionSource =
+						new DefinitionSource(DefinitionSourceType.ParentEntityType, purposeDefinition.ParentEntityType);
+				}
 
 				// determine duplicated setting names in 'purpose'
 				IEnumerable<IGrouping<string, SettingDefinition>> duplicatedNames =
-					from settingDefinition in settingDefinitions
+					from settingDefinition in purposeDefinition.Settings
 					group settingDefinition by settingDefinition.Name
 					into nameDefinitions
 					where nameDefinitions.Count() > 1
@@ -116,12 +145,72 @@ namespace Settings.Schema
 				if(duplicatedNames.Any())
 					throw new DuplicateNameException(duplicatedNames.First().Key);
 
-				entityTypePurposes.Add(purposeKey,
-										new EntityTypePurpose(purposeKey, purpose.Value.ToDictionary(x => x.Name)));
+				#region resolve 'effective' SettingSchemas
+
+				IDictionary<string, SettingSchema> settingDefinitions =
+					new Dictionary<string, SettingSchema>(purposeDefinition.Settings?.Count() ?? 0);
+
+				// define reusable setting 'self' source
+				DefinitionSource selfDefinitionSource = new DefinitionSource(DefinitionSourceType.EntityType, name);
+
+				// include self defined settings
+				foreach(SettingDefinition settingDefinition in purposeDefinition.Settings)
+				{
+					settingDefinitions.Add(
+							settingDefinition.Name,
+							new SettingSchema()
+							{
+								Source = selfDefinitionSource,
+								Definition = settingDefinition
+							}
+						);
+				}
+
+				// resolve inherited settings
+				if(parentSchema != null)
+				{
+					foreach(ISettingSchema settingSchema in parentSchema.GetSettings(purposeDefinition.Name))
+					{
+						// ensure setting is inheritable
+						if(!settingSchema.Definition.Inheritable)
+							continue;
+
+						// skip if setting is already defined by 'self' 
+						if(settingDefinitions.ContainsKey(settingSchema.Definition.Name))
+							continue;
+
+						settingDefinitions.Add(
+								settingSchema.Definition.Name,
+								new SettingSchema()
+								{
+									// determine whether source is direct parent or inherited by parent
+									Source = settingSchema.Source.Type == DefinitionSourceType.EntityType? parentDefinitionSource : settingSchema.Source,
+									Definition = settingSchema.Definition
+								}
+							);
+					}
+				}
+
+				#endregion
+
+				entityTypePurposes.Add(
+						purposeKey,
+						new EntityPurposeSchema()
+						{
+							Definition = purposeDefinition,
+							Settings = settingDefinitions,
+							Source = selfDefinitionSource
+						}
+					);
 			}
 
 			entityTypes.Add(
-				name, new EntityTypeSchema(new EntityTypeInfo(name, description), this.purposes, entityTypePurposes));
+					name,
+					new EntityTypeSchema(
+						new EntityTypeInfo(name, description),
+						this.purposes,
+						entityTypePurposes)
+				);
 
 			return this;
 		}

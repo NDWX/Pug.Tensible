@@ -25,6 +25,6 @@ namespace Settings.Schema
 		/// <param name="purpose">Purpose of setting</param>
 		/// <param name="name">Name of setting</param>
 		/// <returns>One or more setting definitions</returns>
-		IEnumerable<SettingDefinition> GetSettings(string purpose = null, string name = null);
+		IEnumerable<ISettingSchema> GetSettings(string purpose = null, string name = null);
 	}
 }
