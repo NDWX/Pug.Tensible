@@ -8,10 +8,14 @@ namespace Settings
 		/// <summary>
 		/// Value of effective setting was obtained from default value specified in <see cref="Schema.SettingDefinition">SettingDefinition</see>
 		/// </summary>
-		Default,
+		Default = 1,
+		
+		Parent = 2,
+		
 		/// <summary>
 		/// Value of effective setting was specified by user
 		/// </summary>
-		User
+		/// 
+		User = 4
 	}
 }

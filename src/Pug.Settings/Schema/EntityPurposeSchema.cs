@@ -2,12 +2,12 @@
 
 namespace Settings.Schema
 {
-	class EntityPurposeSchema
+	class EntityPurposeSchema : IEntityPurposeSchema
 	{
 		public DefinitionSource Source { get; set; }
 		
 		public EntityPurposeDefinition Definition { get; set; }
 		
-		public IDictionary<string, SettingSchema> Settings { get; set; }
+		public IDictionary<string, ISettingSchema> Settings { get; set; }
 	}
 }

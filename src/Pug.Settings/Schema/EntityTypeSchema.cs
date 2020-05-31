@@ -37,7 +37,7 @@ namespace Settings.Schema
 					select purposeInfo.Value;
 		}
 
-		public EntityPurposeSchema GetPurpose(string name)
+		public IEntityPurposeSchema GetPurpose(string name)
 		{
 			name = name?.Trim() ?? string.Empty;
 

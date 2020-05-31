@@ -5,15 +5,12 @@
 	/// </summary>
 	public class SettingDefinition : ElementInfo
 	{
-		public SettingDefinition(string name, string description, bool inheritable, bool hasDefaultValue, string defaultValue = null)
+		public SettingDefinition(string name, string description, bool hasDefaultValue, string defaultValue = null)
 			: base(name, description)
 		{
-			Inheritable = inheritable;
 			HasDefaultValue = hasDefaultValue;
 			DefaultValue = defaultValue;
 		}
-
-		public bool Inheritable { get; }
 
 		/// <summary>
 		/// Whether default value is specified

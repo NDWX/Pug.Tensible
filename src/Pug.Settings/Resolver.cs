@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Settings.Schema
 {
@@ -12,12 +13,14 @@ namespace Settings.Schema
 	{
 		private readonly ISettingsSchema _settingsSchema;
 		private readonly ISettingStore _settingStore;
+		private readonly IEntityRelationshipResolver _entityRelationshipResolver;
 
 		public Resolver(ISettingsSchema settingsSchema,
-						ISettingStore settingStore)
+						ISettingStore settingStore, IEntityRelationshipResolver entityRelationshipResolver)
 		{
 			_settingsSchema = settingsSchema;
 			_settingStore = settingStore;
+			_entityRelationshipResolver = entityRelationshipResolver;
 		}
 		
 		[SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
@@ -52,9 +55,39 @@ namespace Settings.Schema
 				purpose = purpose.Trim();
 			return purpose;
 		}
-
-		private static Setting ResolveSetting(string purpose, string name, Setting setting, SettingDefinition settingDefinition)
+		
+		private Setting resolveSetting(EntityIdentifier entity, string purpose, string name)
 		{
+			IEntityType entityType = _settingsSchema.GetEntityType(entity.Type);
+
+			/*
+				An exception should be thrown if entity-type does not exist, e.g. incorrect or has been removed from schema,
+				to alert developer of usage of removed/unknown entity-type
+			 */
+			if(entityType == null)
+				throw new UnknownEntityType();
+
+			IEnumerable<ISettingSchema> settingSchemas = entityType.GetSettings(purpose, name);
+
+			ISettingSchema settingSchema = settingSchemas.FirstOrDefault();
+
+			/*
+				An exception should be thrown if setting definition does not exist, e.g. incorrect or has been removed from schema,
+				to alert developer of usage of removed/unknown setting
+			 */
+			if(settingSchema == null)
+				throw new UnknownSetting();
+
+			Setting setting = _settingStore.GetSetting(entity, purpose, name);
+
+			return resolveSetting(entityType, purpose, settingSchema, setting);
+		}
+
+		private Setting resolveSetting(IEntityType entityType, string purpose, ISettingSchema schema,
+											Setting setting)
+		{
+			SettingDefinition settingDefinition = schema.Definition;
+			
 			if(setting != null)
 			{
 				// override stored setting default value with 'current' setting definition default value
@@ -66,17 +99,57 @@ namespace Settings.Schema
 			}
 
 			// if no stored setting is found, return setting based on 'default' specified in SettingDefinition
-			if(settingDefinition.HasDefaultValue)
+			if(settingDefinition.HasDefaultValue && schema.Source.Type == DefinitionSourceType.EntityType)
+			{
+				SettingValueSource settingValueSource = new SettingValueSource
+				{
+					Type = SettingValueSourceType.Default,
+					EntityType =  schema.Source.EntityType
+				};
+				
 				return new Setting
 				{
 					Purpose = purpose,
 					Name = settingDefinition.Name,
 					Value = settingDefinition.DefaultValue,
-					ValueSource = new SettingValueSource
+					ValueSource = settingValueSource
+				};
+			}
+			else // if setting is inherited from parent
+			{
+				IEntityPurposeSchema purposeSchema = entityType.GetPurpose(purpose);
+
+				string parentEntityIdentifier =
+					_entityRelationshipResolver.GetEntityParent(new EntityIdentifier(),
+																purposeSchema.Definition.ParentEntityType);
+
+				EntityIdentifier parentEntity = new EntityIdentifier()
+					{Type = purposeSchema.Definition.ParentEntityType, Identifier = parentEntityIdentifier};
+
+				Setting parentSetting = resolveSetting(parentEntity, purpose, settingDefinition.Name);
+
+				if(parentSetting == null)
+					return null;
+
+				SettingValueSourceType valueSourceType = SettingValueSourceType.Parent;
+
+				if((parentSetting.ValueSource.Type & SettingValueSourceType.Default) == SettingValueSourceType.Default)
+					valueSourceType = valueSourceType | SettingValueSourceType.Parent;
+				else if((parentSetting.ValueSource.Type & SettingValueSourceType.User) == SettingValueSourceType.User)
+					valueSourceType = valueSourceType | SettingValueSourceType.User;
+
+				return new Setting()
+				{
+					Name = settingDefinition.Name,
+					Purpose = purpose,
+					Value = parentSetting.Value,
+					ValueSource = new SettingValueSource()
 					{
-						Type = SettingValueSourceType.Default
+						Type = valueSourceType,
+						EntityType = parentSetting.ValueSource.EntityType
 					}
 				};
+			}
 
 			// no stored setting found and setting definition has no 'default' value
 			return null;
@@ -114,22 +187,22 @@ namespace Settings.Schema
 			if(entityType == null)
 				throw new UnknownEntityType();
 
-			IEnumerable<SettingDefinition> settingDefinitions = entityType.GetSettings(purpose);
+			IEnumerable<ISettingSchema> settingSchemas = entityType.GetSettings(purpose);
 
 			IDictionary<string, Setting> storedSettings = _settingStore.GetSettings(entity, purpose).ToDictionary(x => x.Name);
 			
-			IDictionary<string, Setting> resolvedSettings = new Dictionary<string, Setting>(settingDefinitions.Count());
+			IDictionary<string, Setting> resolvedSettings = new Dictionary<string, Setting>(settingSchemas.Count());
 
 			Setting setting;
 			
-			foreach(SettingDefinition definition in settingDefinitions)
+			foreach(ISettingSchema schema in settingSchemas)
 			{
 				setting = null;
 				
-				if( storedSettings.ContainsKey(definition.Name) )
-					setting = storedSettings[definition.Name];
+				if( storedSettings.ContainsKey(schema.Definition.Name) )
+					setting = storedSettings[schema.Definition.Name];
 
-				resolvedSettings.Add(definition.Name, ResolveSetting(purpose, definition.Name, setting, definition));
+				resolvedSettings.Add(schema.Definition.Name, resolveSetting(entityType, purpose, schema, setting));
 			}
 
 			return resolvedSettings;
@@ -166,29 +239,7 @@ namespace Settings.Schema
 			
 			#endregion
 			
-			IEntityType entityType = _settingsSchema.GetEntityType(entity.Type);
-
-			/*
-				An exception should be thrown if entity-type does not exist, e.g. incorrect or has been removed from schema,
-				to alert developer of usage of removed/unknown entity-type
-			 */
-			if(entityType == null)
-				throw new UnknownEntityType();
-
-			IEnumerable<SettingDefinition> settingDefinitions = entityType.GetSettings(purpose, name);
-
-			SettingDefinition settingDefinition = settingDefinitions.FirstOrDefault();
-
-			/*
-				An exception should be thrown if setting definition does not exist, e.g. incorrect or has been removed from schema,
-				to alert developer of usage of removed/unknown setting
-			 */
-			if(settingDefinition == null)
-				throw new UnknownSetting();
-
-			Setting setting = _settingStore.GetSetting(entity, purpose, name);
-
-			return ResolveSetting(purpose, name, setting, settingDefinition);
+			return resolveSetting(entity, purpose, name);
 		}
 	}
 }

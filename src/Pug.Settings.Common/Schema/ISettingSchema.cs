@@ -4,6 +4,8 @@
 	{
 		DefinitionSource Source { get;  }
 		
+		bool Inheritable { get; }
+		
 		SettingDefinition Definition { get;  }
 	}
 }

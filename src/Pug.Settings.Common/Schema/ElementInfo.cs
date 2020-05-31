@@ -7,7 +7,7 @@
 	{
 		public ElementInfo(string name, string description)
 		{
-			Name = name;
+			Name = name.Trim();
 			Description = description;
 		}
 

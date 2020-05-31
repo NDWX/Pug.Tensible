@@ -9,5 +9,7 @@
 		/// Source type
 		/// </summary>
 		public SettingValueSourceType Type { get; set; }
+		
+		public string EntityType { get; set; }
 	}
 }

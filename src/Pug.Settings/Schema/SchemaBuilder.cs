@@ -57,6 +57,178 @@ namespace Settings.Schema
 			return this;
 		}
 
+		private void ResolvePurposeSchema(EntityPurposeDefinition purposeDefinition, IDictionary<string, EntityPurposeSchema> entityTypePurposes,
+										DefinitionSource selfDefinitionSource)
+		{
+			string purposeKey = purposeDefinition.Name;
+
+			if(purposeKey != string.Empty && entityTypePurposes.ContainsKey(purposeKey))
+				throw new DuplicateNameException(
+					$"Duplicate purpose name '{purposeKey}' specified for entity type");
+
+			// ensure purpose info exists
+			if(!this.purposes.ContainsKey(purposeKey))
+				throw new UnknownPurpose(purposeKey);
+
+			// determine duplicated setting names in 'purpose'
+			IEnumerable<IGrouping<string, SettingDefinition>> duplicatedNames =
+				from settingDefinition in purposeDefinition.Settings
+				group settingDefinition by settingDefinition.Name.Trim()
+				into nameDefinitions
+				where nameDefinitions.Count() > 1
+				select nameDefinitions;
+
+			if(duplicatedNames.Any())
+				throw new DuplicateNameException(duplicatedNames.First().Key);
+
+			#region inheritability determinations
+			
+			bool inheritable = false;
+
+			List<string> inheritableSettings = null; // null indicates all settings are inheritable if purpose is so
+
+			PurposeSettingsInheritance purposeInheritability = purposeDefinition.Inheritability;
+			
+			if(purposeInheritability.InheritanceType == PurposeSettingsInheritanceType.Inherit)
+			{
+				inheritable = true;
+
+				if(purposeInheritability.ApplicableSettings?.Any() ?? false)
+					inheritableSettings = new List<string>(purposeInheritability.ApplicableSettings);
+			}
+			else
+			{
+				if(purposeInheritability.InheritanceType == PurposeSettingsInheritanceType.DoNotInherit)
+				{
+					if(purposeInheritability.ApplicableSettings?.Any() ?? false)
+					{
+						IEnumerable<string> candidates = purposeDefinition
+														.Settings.Select(x => x.Name.Trim())
+														.Except(purposeInheritability.ApplicableSettings);
+
+						if(candidates.Any())
+						{
+							inheritable = true;
+							inheritableSettings = new List<string>(candidates);
+						}
+					}
+				}
+			}
+			
+			#endregion
+
+			// check parent entity type and purpose inheritability
+
+			EntityTypeSchema parentSchema = null;
+			DefinitionSource parentDefinitionSource = null;
+			
+			if(!string.IsNullOrWhiteSpace(purposeDefinition.ParentEntityType))
+			{
+				// ensure parent entity type is known
+				if(!entityTypes.ContainsKey(purposeDefinition.ParentEntityType))
+					throw new UnknownEntityType(purposeDefinition.ParentEntityType);
+
+				// get parent entity type schema
+				parentSchema = entityTypes[purposeDefinition.ParentEntityType];
+
+				IEntityPurposeSchema parentPurpose = parentSchema.GetPurpose(purposeKey);
+
+				// check purpose exists in parent entity type
+				if(parentPurpose == null)
+					throw new UnknownPurpose(purposeKey,
+											$"Parent entity type '{parentSchema.Info.Name}' does not have purpose '{purposeKey}'");
+
+				// check parent entity type purpose is inheritable
+				if(parentPurpose.Definition.PurposeSettingsInheritanceType == PurposeSettingsInheritanceType.DoNotInherit)
+					throw new NotInheritable(
+						"Purpose '{purposeDefinition.Name}' of entity type '{parentSchema.Info.Name}' is not inheritable");
+
+				// define reusable setting 'parent' source
+				parentDefinitionSource =
+					new DefinitionSource(DefinitionSourceType.ParentEntityType, purposeDefinition.ParentEntityType);
+			}
+
+			#region resolve 'effective' SettingSchemas
+
+			IDictionary<string, ISettingSchema> settingDefinitions =
+				new Dictionary<string, ISettingSchema>(purposeDefinition.Settings?.Count() ?? 0);
+
+			// include self defined settings
+			foreach(SettingDefinition settingDefinition in purposeDefinition.Settings)
+			{
+				settingDefinitions.Add(
+						settingDefinition.Name,
+						new SettingSchema()
+						{
+							Source = selfDefinitionSource,
+							Definition = settingDefinition,
+							Inheritable = inheritable && (inheritableSettings?.Contains(settingDefinition.Name) ?? true)
+						}
+					);
+			}
+
+			// resolve inherited settings
+			if(parentSchema != null)
+			{
+				PurposeSettingsInheritance parentSettingsInheritance = purposeDefinition.Inheritance;
+				
+				foreach(ISettingSchema settingSchema in parentSchema.GetSettings(purposeKey))
+				{
+					// ensure setting is inheritable
+					if(!settingSchema.Inheritable)
+						continue;
+
+					SettingDefinition settingDefinition = settingSchema.Definition;
+					
+					// skip if setting is already defined by 'self' 
+					if(settingDefinitions.ContainsKey(settingDefinition.Name))
+						continue;
+					
+					IEnumerable<string> inheritanceApplicableSettings = parentSettingsInheritance.ApplicableSettings;
+					
+					// evaluate purpose definition inheritance
+					if(parentSettingsInheritance.InheritanceType == PurposeSettingsInheritanceType.Inherit)
+					{ // check for explicit inclusion if list is not empty
+						if(inheritanceApplicableSettings != null &&
+							!inheritanceApplicableSettings.Contains(settingDefinition.Name))
+							continue;
+					}
+					else if(parentSettingsInheritance.InheritanceType == PurposeSettingsInheritanceType.DoNotInherit)
+					{ // check for explicit exclusion if list is not empty
+						if(inheritanceApplicableSettings != null && inheritanceApplicableSettings.Contains(settingDefinition.Name) )
+							continue;
+					}
+
+					settingDefinitions.Add(
+							settingDefinition.Name,
+							new SettingSchema()
+							{
+								// determine whether source is direct parent or inherited by parent
+								Source = settingSchema.Source.Type == DefinitionSourceType.EntityType ?
+											parentDefinitionSource : settingSchema.Source,
+								Definition = settingDefinition,
+								Inheritable = inheritable &&
+											(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
+							}
+						);
+				}
+			}
+
+			// todo: Warn about unknown 'notInheritableSettings' entry
+
+			#endregion
+
+			entityTypePurposes.Add(
+					purposeKey,
+					new EntityPurposeSchema()
+					{
+						Definition = purposeDefinition,
+						Settings = settingDefinitions,
+						Source = selfDefinitionSource
+					}
+				);
+		}
+
 		/// <summary>
 		/// Register an entity type with all its purposes and settings
 		/// </summary>
@@ -94,114 +266,12 @@ namespace Settings.Schema
 			IDictionary<string, EntityPurposeSchema> entityTypePurposes =
 				new Dictionary<string, EntityPurposeSchema>(purposes.Count());
 
+			// define reusable setting 'self' source
+			DefinitionSource selfDefinitionSource = new DefinitionSource(DefinitionSourceType.EntityType, name);
+
 			foreach(EntityPurposeDefinition purposeDefinition in purposes)
 			{
-				string purposeKey = purposeDefinition.Name;
-
-				if(purposeKey != string.Empty && entityTypePurposes.ContainsKey(purposeKey))
-					throw new DuplicateNameException(
-						$"Duplicate purpose name '{purposeKey}' specified for entity type");
-
-				// ensure purpose info exists
-				if(!this.purposes.ContainsKey(purposeKey))
-					throw new UnknownPurpose(purposeKey);
-
-				EntityTypeSchema parentSchema = null;
-				DefinitionSource parentDefinitionSource = null;
-
-				// check parent entity type and purpose inheritability
-				if(!string.IsNullOrWhiteSpace(purposeDefinition.ParentEntityType))
-				{
-					// ensure parent entity type is known
-					if(!entityTypes.ContainsKey(purposeDefinition.ParentEntityType))
-						throw new UnknownEntityType(purposeDefinition.ParentEntityType);
-
-					// get parent entity type schema
-					parentSchema = entityTypes[purposeDefinition.ParentEntityType];
-
-					EntityPurposeSchema parentPurpose = parentSchema.GetPurpose(purposeDefinition.Name);
-					
-					// check purpose exists in parent entity type
-					if( parentPurpose == null )
-						throw new UnknownPurpose(purposeDefinition.Name, $"Parent entity type '{parentSchema.Info.Name}' does not have purpose '{purposeDefinition.Name}'");
-
-					// check parent entity type purpose is inheritable
-					if(parentPurpose.Definition.Inheritability == Inheritability.NotInheritable)
-						throw new NotInheritable("Purpose '{purposeDefinition.Name}' of entity type '{parentSchema.Info.Name}' is not inheritable");
-
-					// define reusable setting 'parent' source
-					parentDefinitionSource =
-						new DefinitionSource(DefinitionSourceType.ParentEntityType, purposeDefinition.ParentEntityType);
-				}
-
-				// determine duplicated setting names in 'purpose'
-				IEnumerable<IGrouping<string, SettingDefinition>> duplicatedNames =
-					from settingDefinition in purposeDefinition.Settings
-					group settingDefinition by settingDefinition.Name
-					into nameDefinitions
-					where nameDefinitions.Count() > 1
-					select nameDefinitions;
-
-				if(duplicatedNames.Any())
-					throw new DuplicateNameException(duplicatedNames.First().Key);
-
-				#region resolve 'effective' SettingSchemas
-
-				IDictionary<string, SettingSchema> settingDefinitions =
-					new Dictionary<string, SettingSchema>(purposeDefinition.Settings?.Count() ?? 0);
-
-				// define reusable setting 'self' source
-				DefinitionSource selfDefinitionSource = new DefinitionSource(DefinitionSourceType.EntityType, name);
-
-				// include self defined settings
-				foreach(SettingDefinition settingDefinition in purposeDefinition.Settings)
-				{
-					settingDefinitions.Add(
-							settingDefinition.Name,
-							new SettingSchema()
-							{
-								Source = selfDefinitionSource,
-								Definition = settingDefinition
-							}
-						);
-				}
-
-				// resolve inherited settings
-				if(parentSchema != null)
-				{
-					foreach(ISettingSchema settingSchema in parentSchema.GetSettings(purposeDefinition.Name))
-					{
-						// ensure setting is inheritable
-						if(!settingSchema.Definition.Inheritable)
-							continue;
-
-						// skip if setting is already defined by 'self' 
-						if(settingDefinitions.ContainsKey(settingSchema.Definition.Name))
-							continue;
-
-						settingDefinitions.Add(
-								settingSchema.Definition.Name,
-								new SettingSchema()
-								{
-									// determine whether source is direct parent or inherited by parent
-									Source = settingSchema.Source.Type == DefinitionSourceType.EntityType? parentDefinitionSource : settingSchema.Source,
-									Definition = settingSchema.Definition
-								}
-							);
-					}
-				}
-
-				#endregion
-
-				entityTypePurposes.Add(
-						purposeKey,
-						new EntityPurposeSchema()
-						{
-							Definition = purposeDefinition,
-							Settings = settingDefinitions,
-							Source = selfDefinitionSource
-						}
-					);
+				ResolvePurposeSchema(purposeDefinition, entityTypePurposes, selfDefinitionSource);
 			}
 
 			entityTypes.Add(

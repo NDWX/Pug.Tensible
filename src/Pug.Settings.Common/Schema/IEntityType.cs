@@ -19,6 +19,8 @@ namespace Settings.Schema
 		/// <returns>Purpose infos</returns>
 		IEnumerable<PurposeInfo> GetPurposes();
 
+		IEntityPurposeSchema GetPurpose(string name);
+
 		/// <summary>
 		/// Get all setting definitions within purpose or setting definition as specified by purpose and name
 		/// </summary>

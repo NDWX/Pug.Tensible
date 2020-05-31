@@ -8,7 +8,8 @@
 			this.EntityType = entityType;
 		}
 		
-		public DefinitionSourceType Type { get; set; }
-		public string EntityType { get; set;  }
+		public DefinitionSourceType Type { get; }
+		
+		public string EntityType { get;  }
 	}
 }

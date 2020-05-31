@@ -15,8 +15,4 @@
 		<RepositoryUrl>https://github.com/NDWX/Pug.Settings</RepositoryUrl>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <Compile Remove="IEntityRelationshipResolver.cs" />
-	</ItemGroup>
-
 </Project>
