@@ -139,9 +139,9 @@ namespace Settings.Schema
 											$"Parent entity type '{parentSchema.Info.Name}' does not have purpose '{purposeKey}'");
 
 				// check parent entity type purpose is inheritable
-				if(parentPurpose.Definition.PurposeSettingsInheritanceType == PurposeSettingsInheritanceType.DoNotInherit)
+				if(parentPurpose.Definition.Inheritability.InheritanceType == PurposeSettingsInheritanceType.DoNotInherit)
 					throw new NotInheritable(
-						"Purpose '{purposeDefinition.Name}' of entity type '{parentSchema.Info.Name}' is not inheritable");
+						$"Purpose '{purposeDefinition.Name}' of entity type '{parentSchema.Info.Name}' is not inheritable");
 
 				// define reusable setting 'parent' source
 				parentDefinitionSource =
@@ -172,45 +172,94 @@ namespace Settings.Schema
 			{
 				PurposeSettingsInheritance parentSettingsInheritance = purposeDefinition.Inheritance;
 				
-				foreach(ISettingSchema settingSchema in parentSchema.GetSettings(purposeKey))
+				IEnumerable<ISettingSchema> parentSettings = parentSchema.GetSettings(purposeKey);
+				IDictionary<string, ISettingSchema> parentSettingsTable =
+					parentSettings.ToDictionary(x => x.Definition.Name);
+				
+				// Explicit parent-settings inheritance
+				if(parentSettingsInheritance.InheritanceType == PurposeSettingsInheritanceType.Inherit &&
+					(parentSettingsInheritance.ApplicableSettings?.Any() ?? false))
 				{
-					// ensure setting is inheritable
-					if(!settingSchema.Inheritable)
-						continue;
-
-					SettingDefinition settingDefinition = settingSchema.Definition;
-					
-					// skip if setting is already defined by 'self' 
-					if(settingDefinitions.ContainsKey(settingDefinition.Name))
-						continue;
-					
-					IEnumerable<string> inheritanceApplicableSettings = parentSettingsInheritance.ApplicableSettings;
-					
-					// evaluate purpose definition inheritance
-					if(parentSettingsInheritance.InheritanceType == PurposeSettingsInheritanceType.Inherit)
-					{ // check for explicit inclusion if list is not empty
-						if(inheritanceApplicableSettings != null &&
-							!inheritanceApplicableSettings.Contains(settingDefinition.Name))
+					foreach(string settingName in parentSettingsInheritance.ApplicableSettings)
+					{
+						// skip if setting is already defined by 'self' 
+						if(settingDefinitions.ContainsKey(settingName))
 							continue;
-					}
-					else if(parentSettingsInheritance.InheritanceType == PurposeSettingsInheritanceType.DoNotInherit)
-					{ // check for explicit exclusion if list is not empty
-						if(inheritanceApplicableSettings != null && inheritanceApplicableSettings.Contains(settingDefinition.Name) )
-							continue;
-					}
+						
+						if( !parentSettingsTable.ContainsKey(settingName) )
+							throw new UnknownSetting(settingName);
 
-					settingDefinitions.Add(
+						ISettingSchema settingSchema = parentSettingsTable[settingName];
+						
+						// ensure setting is inheritable
+						if(!settingSchema.Inheritable)
+							throw new NotInheritable($"Purpose '{purposeDefinition.Name}' setting '{settingName}' of entity type '{parentSchema.Info.Name}' is not inheritable.");
+
+						SettingDefinition settingDefinition = settingSchema.Definition;
+
+						settingDefinitions.Add(
+								settingName,
+								new SettingSchema()
+								{
+									// determine whether source is direct parent or inherited by parent
+									Source = settingSchema.Source.Type == DefinitionSourceType.EntityType
+												? parentDefinitionSource
+												: settingSchema.Source,
+									Definition = settingDefinition,
+									Inheritable = inheritable &&
+												(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
+								}
+							);
+					}
+				}
+				else // implicit parent-settings inheritance
+				{
+					foreach(ISettingSchema settingSchema in parentSettings)
+					{
+						// ensure setting is inheritable
+						if(!settingSchema.Inheritable)
+							continue;
+
+						SettingDefinition settingDefinition = settingSchema.Definition;
+
+						// skip if setting is already defined by 'self'
+						if(settingDefinitions.ContainsKey(settingDefinition.Name))
+							continue;
+
+						IEnumerable<string> inheritanceApplicableSettings =
+							parentSettingsInheritance.ApplicableSettings;
+
+						// evaluate purpose definition parent-settings inheritance
+						if(parentSettingsInheritance.InheritanceType == PurposeSettingsInheritanceType.Inherit)
+						{
+							// check for explicit inclusion if list is not empty
+							if(inheritanceApplicableSettings != null &&
+								!inheritanceApplicableSettings.Contains(settingDefinition.Name))
+								continue;
+						}
+						else if(parentSettingsInheritance.InheritanceType ==
+								PurposeSettingsInheritanceType.DoNotInherit)
+						{
+							// check for explicit exclusion if list is not empty
+							if(inheritanceApplicableSettings != null &&
+								inheritanceApplicableSettings.Contains(settingDefinition.Name))
+								continue;
+						}
+
+						settingDefinitions.Add(
 							settingDefinition.Name,
 							new SettingSchema()
 							{
 								// determine whether source is direct parent or inherited by parent
-								Source = settingSchema.Source.Type == DefinitionSourceType.EntityType ?
-											parentDefinitionSource : settingSchema.Source,
+								Source = settingSchema.Source.Type == DefinitionSourceType.EntityType
+											? parentDefinitionSource
+											: settingSchema.Source,
 								Definition = settingDefinition,
 								Inheritable = inheritable &&
 											(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
 							}
 						);
+					}
 				}
 			}
 

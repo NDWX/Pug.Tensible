@@ -51,13 +51,17 @@ namespace Settings.Schema
 		{
 			purpose = purpose?.Trim() ?? string.Empty;
 
-			if(name != null)
-				name = name.Trim();
+			name = name?.Trim();
 			
 			if(purposes.ContainsKey(purpose))
 			{
 				if(!string.IsNullOrWhiteSpace(name))
-					return new[] {purposes[purpose].Settings[name.Trim()]};
+				{
+					if( purposes[purpose].Settings.ContainsKey(name))
+						return new[] {purposes[purpose].Settings[name]};
+					
+					return new ISettingSchema[] { };
+				}
 
 				return purposes[purpose].Settings.Values;
 			}

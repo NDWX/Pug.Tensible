@@ -99,21 +99,24 @@ namespace Settings.Schema
 			}
 
 			// if no stored setting is found, return setting based on 'default' specified in SettingDefinition
-			if(settingDefinition.HasDefaultValue && schema.Source.Type == DefinitionSourceType.EntityType)
+			if(schema.Source.Type == DefinitionSourceType.EntityType)
 			{
-				SettingValueSource settingValueSource = new SettingValueSource
+				if(settingDefinition.HasDefaultValue)
 				{
-					Type = SettingValueSourceType.Default,
-					EntityType =  schema.Source.EntityType
-				};
-				
-				return new Setting
-				{
-					Purpose = purpose,
-					Name = settingDefinition.Name,
-					Value = settingDefinition.DefaultValue,
-					ValueSource = settingValueSource
-				};
+					SettingValueSource settingValueSource = new SettingValueSource
+					{
+						Type = SettingValueSourceType.Default,
+						EntityType = schema.Source.EntityType
+					};
+
+					return new Setting
+					{
+						Purpose = purpose,
+						Name = settingDefinition.Name,
+						Value = settingDefinition.DefaultValue,
+						ValueSource = settingValueSource
+					};
+				}
 			}
 			else // if setting is inherited from parent
 			{

@@ -8,10 +8,10 @@ namespace Settings.Schema
 		public PurposeSettingsInheritanceType InheritanceType { get; }
 		public IEnumerable<string> ApplicableSettings { get; }
 
-		public PurposeSettingsInheritance(PurposeSettingsInheritanceType inheritanceType, IEnumerable<string> applicableSettings)
+		public PurposeSettingsInheritance(PurposeSettingsInheritanceType inheritanceType, IEnumerable<string> applicableSettings = null)
 		{
 			InheritanceType = inheritanceType;
-			ApplicableSettings = applicableSettings.Select(x => x.Trim());
+			ApplicableSettings = applicableSettings?.Select(x => x.Trim());
 		}
 	}
 }
