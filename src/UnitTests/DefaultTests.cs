@@ -64,11 +64,13 @@ namespace UnitTests
 										"Setting2", "Description of setting 2", true,
 										"NewDefaultValue"),
 									new SettingDefinition(
-										"Setting3", "Description of setting 3", false)
+										"Setting3", "Description of setting 3", false),
+									new SettingDefinition(
+									"Setting4", "Description of setting 3", false)
 								},
 								new PurposeSettingsInheritance(
 									PurposeSettingsInheritanceType.Inherit,
-									new []{"Setting1", "Setting2"})
+									new []{"Setting1", "Setting2", "Setting3"})
 							)
 					}
 				);
@@ -215,7 +217,7 @@ namespace UnitTests
 						new EntityPurposeDefinition(
 							"Purpose1", "FirstType",
 							inheritance: new PurposeSettingsInheritance(
-								PurposeSettingsInheritanceType.Inherit, new[] {"Setting4"}),
+								PurposeSettingsInheritanceType.Inherit, new[] {"Setting5"}),
 							new[]
 							{
 								new SettingDefinition(
@@ -244,7 +246,7 @@ namespace UnitTests
 								new EntityPurposeDefinition(
 										"Purpose1", "FirstType",
 										inheritance: new PurposeSettingsInheritance(
-											PurposeSettingsInheritanceType.Inherit, new[] {"Setting3"}),
+											PurposeSettingsInheritanceType.Inherit, new[] {"Setting4"}),
 										new[]
 										{
 											new SettingDefinition(
@@ -271,7 +273,9 @@ namespace UnitTests
 					purposes: new[]
 					{
 						new EntityPurposeDefinition(
-								"Purpose1", "FirstType", null,
+								"Purpose1", "FirstType", 
+								inheritance: new PurposeSettingsInheritance(PurposeSettingsInheritanceType.DoNotInherit, 
+																						new string[] {"Setting2"}), 
 								new[]
 								{
 									new SettingDefinition(
@@ -306,7 +310,7 @@ namespace UnitTests
 					purposes: new[]
 					{
 						new EntityPurposeDefinition(
-								"Purpose2", null, new PurposeSettingsInheritance(PurposeSettingsInheritanceType.Inherit, new []{"Setting1"}), null,
+								"Purpose1", "SecondType", new PurposeSettingsInheritance(PurposeSettingsInheritanceType.Inherit, new []{"Setting1", "Setting3"}), null,
 								new PurposeSettingsInheritance(
 										PurposeSettingsInheritanceType.DoNotInherit,
 										null
@@ -331,33 +335,123 @@ namespace UnitTests
 		[Order(21)]
 		public void InheritableSettingShouldPropagateToInheritor()
 		{
+			IEntityType entityType = context.Schema.GetEntityType("SecondType");
 			
+			Assert.NotNull(entityType);
+
+			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			
+			Assert.NotNull(purposeSchema);
+
+			Assert.True(purposeSchema.Settings.ContainsKey("Setting3"));
+
+			ISettingSchema settingSchema = purposeSchema.Settings["Setting3"];
+			
+			Assert.True(settingSchema.Source.Type == DefinitionSourceType.ParentEntityType);
+		
+			Assert.True(settingSchema.Source.EntityType == purposeSchema.Definition.ParentEntityType);
 		}
 
 		[Fact]
 		[Order(22)]
-		public void NonInheritableSettingShouldPropagateToInheritor()
+		public void NonInheritableSettingShouldNotPropagateToInheritor()
 		{
+			IEntityType entityType = context.Schema.GetEntityType("SecondType");
 			
+			Assert.NotNull(entityType);
+
+			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			
+			Assert.NotNull(purposeSchema);
+
+			Assert.False(purposeSchema.Settings.ContainsKey("Setting4"));
 		}
 
 		[Fact]
 		[Order(23)]
 		public void InheritanceBlockShouldBeHonoured()
 		{
+			IEntityType entityType = context.Schema.GetEntityType("SecondType");
 			
+			Assert.NotNull(entityType);
+
+			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			
+			Assert.NotNull(purposeSchema);
+
+			Assert.False(purposeSchema.Settings.ContainsKey("Setting2"));
 		}
 
 		[Fact]
 		[Order(24)]
+		public void InheritanceDirectiveShouldBeHonoured()
+		{
+			IEntityType entityType = context.Schema.GetEntityType("ThirdType");
+			
+			Assert.NotNull(entityType);
+
+			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			
+			Assert.NotNull(purposeSchema);
+
+			Assert.True(purposeSchema.Settings.ContainsKey("Setting1"));
+
+			ISettingSchema settingSchema = purposeSchema.Settings["Setting1"];
+			
+			Assert.True(settingSchema.Source.Type == DefinitionSourceType.ParentEntityType);
+		
+			Assert.True(settingSchema.Source.EntityType == purposeSchema.Definition.ParentEntityType);
+			
+			Assert.True(settingSchema.Definition.DefaultValue == "t2p1s1Value");
+		}
+
+		[Fact]
+		[Order(25)]
+		public void SecondLevelInheritanceShouldWork()
+		{
+			IEntityType entityType = context.Schema.GetEntityType("ThirdType");
+			
+			Assert.NotNull(entityType);
+
+			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			
+			Assert.NotNull(purposeSchema);
+
+			Assert.True(purposeSchema.Settings.ContainsKey("Setting3"));
+
+			ISettingSchema settingSchema = purposeSchema.Settings["Setting3"];
+			
+			Assert.True(settingSchema.Source.Type == DefinitionSourceType.ParentEntityType);
+		
+			Assert.True(settingSchema.Source.EntityType == "FirstType");
+		}
+
+		[Fact]
+		[Order(26)]
 		public void SettingOverrideShouldBeHonoured()
 		{
+			IEntityType entityType = context.Schema.GetEntityType("SecondType");
 			
+			Assert.NotNull(entityType);
+
+			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			
+			Assert.NotNull(purposeSchema);
+			
+			Assert.True(purposeSchema.Settings.ContainsKey("Setting1"));
+
+			ISettingSchema settingSchema = purposeSchema.Settings["Setting1"];
+			
+			Assert.True(settingSchema.Source.Type == DefinitionSourceType.EntityType);
+		
+			Assert.True(settingSchema.Source.EntityType == entityType.GetInfo().Name);
+			
+			Assert.True(settingSchema.Definition.HasDefaultValue == true && settingSchema.Definition.DefaultValue == "t2p1s1Value" );
 		}
 
 		[Theory]
 		[Order(60)]
-		[InlineData("FirstType", "FirstEntity", "Purpose1", "Setting4")]
+		[InlineData("FirstType", "FirstEntity", "Purpose1", "Setting5")]
 		[InlineData("FirstType", "FirstEntity", "Purpose2", "Setting1")]
 		public void ShouldErrorIfUnknownSettingRequested(string type, string identifier, string purpose, string name)
 		{
