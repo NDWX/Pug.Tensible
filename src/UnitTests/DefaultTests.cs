@@ -423,7 +423,11 @@ namespace UnitTests
 			
 			Assert.True(settingSchema.Source.Type == DefinitionSourceType.ParentEntityType);
 		
-			Assert.True(settingSchema.Source.EntityType == "FirstType");
+			Assert.True(settingSchema.Source.EntityType == "SecondType");
+			
+			Assert.True(settingSchema.Source.Source.Type == DefinitionSourceType.ParentEntityType);
+		
+			Assert.True(settingSchema.Source.Source.EntityType == "FirstType");
 		}
 
 		[Fact]

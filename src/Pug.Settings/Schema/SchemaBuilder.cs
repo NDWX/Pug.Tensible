@@ -204,7 +204,7 @@ namespace Settings.Schema
 									// determine whether source is direct parent or inherited by parent
 									Source = settingSchema.Source.Type == DefinitionSourceType.EntityType
 												? parentDefinitionSource
-												: settingSchema.Source,
+												: new DefinitionSource(DefinitionSourceType.ParentEntityType, parentSchema.Info.Name, settingSchema.Source),
 									Definition = settingDefinition,
 									Inheritable = inheritable &&
 												(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
@@ -253,7 +253,7 @@ namespace Settings.Schema
 								// determine whether source is direct parent or inherited by parent
 								Source = settingSchema.Source.Type == DefinitionSourceType.EntityType
 											? parentDefinitionSource
-											: settingSchema.Source,
+											: new DefinitionSource(DefinitionSourceType.ParentEntityType, parentSchema.Info.Name, settingSchema.Source),
 								Definition = settingDefinition,
 								Inheritable = inheritable &&
 											(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
