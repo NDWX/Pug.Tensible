@@ -326,7 +326,7 @@ namespace UnitTests
 		{
 			context.Schema = context.Builder.Build();
 
-			context.Resolver = new Resolver(context.Schema, new DummySettingStore(), new DummyEntityRelationshipResolver());
+			context.Resolver = context.Schema.GetResolver(new DummySettingStore(), new DummyEntityRelationshipResolver());
 
 			Assert.NotNull(context.Schema);
 		}
@@ -518,7 +518,7 @@ namespace UnitTests
 
 			Assert.NotNull(setting);
 			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.User);
-			Assert.Equal(setting.Value, "Test Value");
+			Assert.Equal("Test Value", setting.Value);
 		}
 
 		[Fact]
@@ -532,12 +532,12 @@ namespace UnitTests
 
 			Assert.True(settings.ContainsKey("Setting1"));
 			Setting setting = settings["Setting1"];
-			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.User);
-			Assert.Equal(setting.Value, "Test Value");
+			Assert.Equal(SettingValueSourceType.User, setting.ValueSource.Type );
+			Assert.Equal("Test Value", setting.Value);
 			
 			Assert.True(settings.ContainsKey("Setting2"));
 			setting = settings["Setting2"];
-			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.Default);
+			Assert.Equal(SettingValueSourceType.Default, setting.ValueSource.Type);
 			Assert.Equal("NewDefaultValue", setting.Value);
 		}
 	}

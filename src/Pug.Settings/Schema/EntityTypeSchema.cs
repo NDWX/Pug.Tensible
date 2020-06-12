@@ -9,6 +9,9 @@ namespace Settings.Schema
 		private readonly IDictionary<string, PurposeInfo> _purposeInfos;
 		private readonly IDictionary<string, EntityPurposeSchema> purposes;
 
+		private SettingValueSource defaultValueSource,
+											userValueSource;
+
 		public EntityTypeSchema(EntityTypeInfo info, IDictionary<string, PurposeInfo> purposeInfos,
 								IDictionary<string, EntityPurposeSchema> purposes)
 		{
@@ -70,5 +73,27 @@ namespace Settings.Schema
 		}
 
 		#endregion
+
+		public SettingValueSource DefaultValueSource
+		{
+			get
+			{
+				if(defaultValueSource == null)
+					defaultValueSource = new SettingValueSource(SettingValueSourceType.Default, this.Info.Name);
+
+				return defaultValueSource;
+			}
+		}
+
+		public SettingValueSource UserValueSource
+		{
+			get
+			{
+				if(userValueSource == null)
+					userValueSource = new SettingValueSource(SettingValueSourceType.User, this.Info.Name);
+
+				return userValueSource;
+			}
+		}
 	}
 }

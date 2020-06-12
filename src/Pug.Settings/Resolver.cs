@@ -9,7 +9,7 @@ namespace Settings.Schema
 	/// <summary>
 	/// Responsible for resolving effective settings based on schema and settings stored in ISettingStore
 	/// </summary>
-	public class Resolver
+	class Resolver : IResolver
 	{
 		private readonly ISettingsSchema _settingsSchema;
 		private readonly ISettingStore _settingStore;
@@ -58,7 +58,7 @@ namespace Settings.Schema
 		
 		private Setting resolveSetting(EntityIdentifier entity, string purpose, string name)
 		{
-			IEntityType entityType = _settingsSchema.GetEntityType(entity.Type);
+			EntityTypeSchema entityType = _settingsSchema.GetEntityType(entity.Type) as EntityTypeSchema;
 
 			/*
 				An exception should be thrown if entity-type does not exist, e.g. incorrect or has been removed from schema,
@@ -83,17 +83,14 @@ namespace Settings.Schema
 			return resolveSetting(entityType, purpose, settingSchema, setting);
 		}
 
-		private Setting resolveSetting(IEntityType entityType, string purpose, ISettingSchema schema,
+		private Setting resolveSetting(EntityTypeSchema entityType, string purpose, ISettingSchema schema,
 											Setting setting)
 		{
 			SettingDefinition settingDefinition = schema.Definition;
 			
-			if(setting != null)
+			if(setting != null && setting.ValueSource.Type == SettingValueSourceType.User)
 			{
-				// override stored setting default value with 'current' setting definition default value
-				if(setting.ValueSource.Type == SettingValueSourceType.Default)
-					if(settingDefinition.HasDefaultValue)
-						setting.Value = settingDefinition.DefaultValue;
+				setting.ValueSource = entityType.UserValueSource;
 
 				return setting;
 			}
@@ -103,18 +100,12 @@ namespace Settings.Schema
 			{
 				if(settingDefinition.HasDefaultValue)
 				{
-					SettingValueSource settingValueSource = new SettingValueSource
-					{
-						Type = SettingValueSourceType.Default,
-						EntityType = schema.Source.EntityType
-					};
-
 					return new Setting
 					{
 						Purpose = purpose,
 						Name = settingDefinition.Name,
 						Value = settingDefinition.DefaultValue,
-						ValueSource = settingValueSource
+						ValueSource = entityType.DefaultValueSource
 					};
 				}
 			}
@@ -137,7 +128,7 @@ namespace Settings.Schema
 				SettingValueSourceType valueSourceType = SettingValueSourceType.Parent;
 
 				if((parentSetting.ValueSource.Type & SettingValueSourceType.Default) == SettingValueSourceType.Default)
-					valueSourceType = valueSourceType | SettingValueSourceType.Parent;
+					valueSourceType = valueSourceType | SettingValueSourceType.Default;
 				else if((parentSetting.ValueSource.Type & SettingValueSourceType.User) == SettingValueSourceType.User)
 					valueSourceType = valueSourceType | SettingValueSourceType.User;
 
@@ -146,11 +137,12 @@ namespace Settings.Schema
 					Name = settingDefinition.Name,
 					Purpose = purpose,
 					Value = parentSetting.Value,
-					ValueSource = new SettingValueSource()
-					{
-						Type = valueSourceType,
-						EntityType = parentSetting.ValueSource.EntityType
-					}
+					ValueSource = new SettingValueSource(
+							valueSourceType, 
+							parentSetting.ValueSource.EntityType,
+							(parentSetting.ValueSource.Type & SettingValueSourceType.Parent) == SettingValueSourceType.Parent?
+								parentSetting.ValueSource.Source : null
+					)
 				};
 			}
 
@@ -181,7 +173,7 @@ namespace Settings.Schema
 			
 			#endregion
 			
-			IEntityType entityType = _settingsSchema.GetEntityType(entity.Type);
+			EntityTypeSchema entityType = _settingsSchema.GetEntityType(entity.Type) as EntityTypeSchema;
 
 			/*
 				An exception should be thrown if entity-type does not exist, e.g. incorrect or has been removed from schema,

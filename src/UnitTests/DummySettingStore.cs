@@ -23,10 +23,7 @@ namespace UnitTests
 								{
 									Name = name,
 									Purpose = purpose,
-									ValueSource = new SettingValueSource
-									{
-										Type = SettingValueSourceType.User
-									},
+									ValueSource = new SettingValueSource(SettingValueSourceType.User, entity.Type),
 									Value = "Test Value"
 								};
 							else if(purpose == "Purpose1" && name == "Setting2")
@@ -34,10 +31,7 @@ namespace UnitTests
 								{
 									Name = name,
 									Purpose = purpose,
-									ValueSource = new SettingValueSource
-									{
-										Type = SettingValueSourceType.Default
-									},
+									ValueSource = new SettingValueSource(SettingValueSourceType.Default, entity.Type),
 									Value = "Old Default Value"
 								};
 
@@ -64,20 +58,14 @@ namespace UnitTests
 				{
 					Name = "Setting1",
 					Purpose = purpose,
-					ValueSource = new SettingValueSource
-					{
-						Type = SettingValueSourceType.User
-					},
+					ValueSource = new SettingValueSource( SettingValueSourceType.User, entity.Type),
 					Value = "Test Value"
 				},
 				new Setting
 				{
 					Name = "Setting2",
 					Purpose = purpose,
-					ValueSource = new SettingValueSource
-					{
-						Type = SettingValueSourceType.Default
-					},
+					ValueSource = new SettingValueSource(SettingValueSourceType.Default, entity.Type),
 					Value = "Old Default Value"
 				}
 			};

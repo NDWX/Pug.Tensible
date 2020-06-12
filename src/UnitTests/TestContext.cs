@@ -1,4 +1,5 @@
-﻿using Settings.Schema;
+﻿using Settings;
+using Settings.Schema;
 
 namespace UnitTests
 {
@@ -8,6 +9,6 @@ namespace UnitTests
 
 		public ISettingsSchema Schema { get; set; }
 
-		public Resolver Resolver { get; set; }
+		public IResolver Resolver { get; set; }
 	}
 }

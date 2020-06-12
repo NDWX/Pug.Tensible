@@ -5,11 +5,20 @@
 	/// </summary>
 	public class SettingValueSource
 	{
+		public SettingValueSource(SettingValueSourceType type, string entityType, SettingValueSource source = null)
+		{
+			this.Type = type;
+			this.EntityType = entityType;
+			this.Source = source;
+		}
+		
 		/// <summary>
 		/// Source type
 		/// </summary>
-		public SettingValueSourceType Type { get; set; }
+		public SettingValueSourceType Type { get;  }
 		
-		public string EntityType { get; set; }
+		public string EntityType { get;  }
+
+		public SettingValueSource Source { get;  }
 	}
 }

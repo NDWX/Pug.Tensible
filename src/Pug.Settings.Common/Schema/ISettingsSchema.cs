@@ -25,5 +25,7 @@ namespace Settings.Schema
 		/// <param name="name"></param>
 		/// <returns>An instance of <see ref="IEntityType">IEntityType</see> or null</returns>
 		IEntityType GetEntityType(string name);
+
+		IResolver GetResolver(ISettingStore settingStore, IEntityRelationshipResolver entityRelationshipResolver);
 	}
 }
