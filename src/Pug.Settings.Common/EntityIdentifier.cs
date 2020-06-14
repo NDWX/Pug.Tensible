@@ -1,4 +1,6 @@
-﻿namespace Settings
+﻿using Settings.Schema;
+
+namespace Settings
 {
 	/// <summary>
 	/// Unique identifier of an entity
@@ -6,7 +8,7 @@
 	public class EntityIdentifier
 	{
 		/// <summary>
-		/// Type of entity. <seealso cref="Schema.IEntityType"/>
+		/// Type of entity. <seealso cref="IEntityTypeSchema"/>
 		/// </summary>
 		public string Type { get; set; }
 		

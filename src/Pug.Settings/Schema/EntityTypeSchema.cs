@@ -4,11 +4,12 @@ using System.Linq;
 
 namespace Settings.Schema
 {
-	internal class EntityTypeSchema : IEntityType
+	internal class EntityTypeSchema : IEntityTypeSchema
 	{
 		private readonly IDictionary<string, PurposeInfo> _purposeInfos;
 		private readonly IDictionary<string, EntityPurposeSchema> purposes;
 
+		EntityIdentifier valueSourceEntity;
 		private SettingValueSource defaultValueSource,
 											userValueSource;
 
@@ -27,7 +28,7 @@ namespace Settings.Schema
 
 		#region IEntityType Members
 
-		public EntityTypeInfo GetInfo()
+		public EntityTypeInfo GetEntityTypeInfo()
 		{
 			return Info;
 		}
@@ -74,12 +75,24 @@ namespace Settings.Schema
 
 		#endregion
 
+		EntityIdentifier ValueSourceEntity
+		{
+			get
+			{
+				if(valueSourceEntity == null)
+					valueSourceEntity = new EntityIdentifier(){ Type = this.Info.Name};
+
+				return valueSourceEntity;
+			}
+		}
 		public SettingValueSource DefaultValueSource
 		{
 			get
 			{
 				if(defaultValueSource == null)
-					defaultValueSource = new SettingValueSource(SettingValueSourceType.Default, this.Info.Name);
+				{
+					defaultValueSource = new SettingValueSource(SettingValueSourceType.Default, valueSourceEntity);
+				}
 
 				return defaultValueSource;
 			}
@@ -90,7 +103,7 @@ namespace Settings.Schema
 			get
 			{
 				if(userValueSource == null)
-					userValueSource = new SettingValueSource(SettingValueSourceType.User, this.Info.Name);
+					userValueSource = new SettingValueSource(SettingValueSourceType.User, valueSourceEntity);
 
 				return userValueSource;
 			}

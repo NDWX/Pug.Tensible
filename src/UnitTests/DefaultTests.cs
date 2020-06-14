@@ -66,7 +66,7 @@ namespace UnitTests
 									new SettingDefinition(
 										"Setting3", "Description of setting 3", false),
 									new SettingDefinition(
-									"Setting4", "Description of setting 3", false)
+									"Setting4", "Description of setting 4", false)
 								},
 								new PurposeSettingsInheritance(
 									PurposeSettingsInheritanceType.Inherit,
@@ -335,11 +335,11 @@ namespace UnitTests
 		[Order(21)]
 		public void InheritableSettingShouldPropagateToInheritor()
 		{
-			IEntityType entityType = context.Schema.GetEntityType("SecondType");
+			IEntityTypeSchema entityTypeSchema = context.Schema.GetEntityType("SecondType");
 			
-			Assert.NotNull(entityType);
+			Assert.NotNull(entityTypeSchema);
 
-			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			IEntityPurposeSchema purposeSchema = entityTypeSchema.GetPurpose("Purpose1");
 			
 			Assert.NotNull(purposeSchema);
 
@@ -356,11 +356,11 @@ namespace UnitTests
 		[Order(22)]
 		public void NonInheritableSettingShouldNotPropagateToInheritor()
 		{
-			IEntityType entityType = context.Schema.GetEntityType("SecondType");
+			IEntityTypeSchema entityTypeSchema = context.Schema.GetEntityType("SecondType");
 			
-			Assert.NotNull(entityType);
+			Assert.NotNull(entityTypeSchema);
 
-			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			IEntityPurposeSchema purposeSchema = entityTypeSchema.GetPurpose("Purpose1");
 			
 			Assert.NotNull(purposeSchema);
 
@@ -371,11 +371,11 @@ namespace UnitTests
 		[Order(23)]
 		public void InheritanceBlockShouldBeHonoured()
 		{
-			IEntityType entityType = context.Schema.GetEntityType("SecondType");
+			IEntityTypeSchema entityTypeSchema = context.Schema.GetEntityType("SecondType");
 			
-			Assert.NotNull(entityType);
+			Assert.NotNull(entityTypeSchema);
 
-			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			IEntityPurposeSchema purposeSchema = entityTypeSchema.GetPurpose("Purpose1");
 			
 			Assert.NotNull(purposeSchema);
 
@@ -386,11 +386,11 @@ namespace UnitTests
 		[Order(24)]
 		public void InheritanceDirectiveShouldBeHonoured()
 		{
-			IEntityType entityType = context.Schema.GetEntityType("ThirdType");
+			IEntityTypeSchema entityTypeSchema = context.Schema.GetEntityType("ThirdType");
 			
-			Assert.NotNull(entityType);
+			Assert.NotNull(entityTypeSchema);
 
-			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			IEntityPurposeSchema purposeSchema = entityTypeSchema.GetPurpose("Purpose1");
 			
 			Assert.NotNull(purposeSchema);
 
@@ -403,17 +403,19 @@ namespace UnitTests
 			Assert.True(settingSchema.Source.EntityType == purposeSchema.Definition.ParentEntityType);
 			
 			Assert.True(settingSchema.Definition.DefaultValue == "t2p1s1Value");
+			
+			Assert.False(purposeSchema.Settings.ContainsKey("Setting2"));
 		}
 
 		[Fact]
 		[Order(25)]
 		public void SecondLevelInheritanceShouldWork()
 		{
-			IEntityType entityType = context.Schema.GetEntityType("ThirdType");
+			IEntityTypeSchema entityTypeSchema = context.Schema.GetEntityType("ThirdType");
 			
-			Assert.NotNull(entityType);
+			Assert.NotNull(entityTypeSchema);
 
-			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			IEntityPurposeSchema purposeSchema = entityTypeSchema.GetPurpose("Purpose1");
 			
 			Assert.NotNull(purposeSchema);
 
@@ -434,11 +436,11 @@ namespace UnitTests
 		[Order(26)]
 		public void SettingOverrideShouldBeHonoured()
 		{
-			IEntityType entityType = context.Schema.GetEntityType("SecondType");
+			IEntityTypeSchema entityTypeSchema = context.Schema.GetEntityType("SecondType");
 			
-			Assert.NotNull(entityType);
+			Assert.NotNull(entityTypeSchema);
 
-			IEntityPurposeSchema purposeSchema = entityType.GetPurpose("Purpose1");
+			IEntityPurposeSchema purposeSchema = entityTypeSchema.GetPurpose("Purpose1");
 			
 			Assert.NotNull(purposeSchema);
 			
@@ -448,7 +450,7 @@ namespace UnitTests
 			
 			Assert.True(settingSchema.Source.Type == DefinitionSourceType.EntityType);
 		
-			Assert.True(settingSchema.Source.EntityType == entityType.GetInfo().Name);
+			Assert.True(settingSchema.Source.EntityType == entityTypeSchema.GetEntityTypeInfo().Name);
 			
 			Assert.True(settingSchema.Definition.HasDefaultValue == true && settingSchema.Definition.DefaultValue == "t2p1s1Value" );
 		}
@@ -469,26 +471,12 @@ namespace UnitTests
 
 		[Fact]
 		[Order(60)]
-		public void ShouldGetNewDefaultSettingValue()
-		{
-			Setting setting = context.Resolver.ResolveSetting(
-				new EntityIdentifier {Identifier = "FirstEntity", Type = "FirstType"},
-				"Purpose1",
-				"Setting2");
-
-			Assert.NotNull(setting);
-			Assert.Equal(setting.ValueSource.Type, SettingValueSourceType.Default);
-			Assert.Equal("NewDefaultValue", setting.Value);
-		}
-
-		[Fact]
-		[Order(60)]
 		public void ShouldGetNullIfSettingNotStoredAndNoDefaultSpecified()
 		{
 			Setting setting = context.Resolver.ResolveSetting(
 				new EntityIdentifier {Identifier = "FirstEntity", Type = "FirstType"},
 				"Purpose1",
-				"Setting3");
+				"Setting4");
 
 			Assert.Null(setting);
 		}
@@ -523,7 +511,7 @@ namespace UnitTests
 
 		[Fact]
 		[Order(60)]
-		public void PurposeLevelSettingsResolutionBehaviousShouldBeConsistentWithSettingLevelResolution()
+		public void PurposeLevelSettingsResolutionBehaviourShouldBeConsistentWithSettingLevelResolution()
 		{
 			IDictionary<string, Setting> settings = context.Resolver.ResolveSettings(
 				new EntityIdentifier
@@ -539,6 +527,38 @@ namespace UnitTests
 			setting = settings["Setting2"];
 			Assert.Equal(SettingValueSourceType.Default, setting.ValueSource.Type);
 			Assert.Equal("NewDefaultValue", setting.Value);
+		}
+
+		[Fact]
+		[Order(61)]
+		public void DefaultValueInheritanceShouldWork()
+		{
+			Setting setting = context.Resolver.ResolveSetting(
+				new EntityIdentifier
+					{Identifier = "ThirdEntity", Type = "ThirdType"},
+				"Purpose1", "Setting1");
+			
+			Assert.Equal("t2p1s1Value", setting.Value);
+			Assert.Equal(SettingValueSourceType.Parent | SettingValueSourceType.Default, setting.ValueSource.Type);
+			Assert.Equal("SecondType", setting.ValueSource.Entity.Type);
+		}
+
+		[Fact]
+		[Order(61)]
+		public void SettingValueInheritanceShouldWork()
+		{
+			Setting setting = context.Resolver.ResolveSetting(
+				new EntityIdentifier
+					{Identifier = "ThirdEntity", Type = "ThirdType"},
+				"Purpose1", "Setting3");
+			
+			Assert.Equal("E1P1S3Value", setting.Value);
+			Assert.Equal(SettingValueSourceType.Parent | SettingValueSourceType.User, setting.ValueSource.Type);
+			Assert.Equal("SecondType", setting.ValueSource.Entity.Type);
+			Assert.Equal("SecondEntity", setting.ValueSource.Entity.Identifier);
+			Assert.Equal(SettingValueSourceType.Parent | SettingValueSourceType.User, setting.ValueSource.Source.Type);
+			Assert.Equal("FirstType", setting.ValueSource.Source.Entity.Type);
+			Assert.Equal("FirstEntity", setting.ValueSource.Source.Entity.Identifier);
 		}
 	}
 }

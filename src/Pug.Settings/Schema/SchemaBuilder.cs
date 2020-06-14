@@ -58,7 +58,7 @@ namespace Settings.Schema
 		}
 
 		private void ResolvePurposeSchema(EntityPurposeDefinition purposeDefinition, IDictionary<string, EntityPurposeSchema> entityTypePurposes,
-										DefinitionSource selfDefinitionSource)
+										SettingDefinitionSource selfSettingDefinitionSource)
 		{
 			string purposeKey = purposeDefinition.Name;
 
@@ -120,7 +120,7 @@ namespace Settings.Schema
 			// check parent entity type and purpose inheritability
 
 			EntityTypeSchema parentSchema = null;
-			DefinitionSource parentDefinitionSource = null;
+			SettingDefinitionSource parentSettingDefinitionSource = null;
 			
 			if(!string.IsNullOrWhiteSpace(purposeDefinition.ParentEntityType))
 			{
@@ -144,8 +144,8 @@ namespace Settings.Schema
 						$"Purpose '{purposeDefinition.Name}' of entity type '{parentSchema.Info.Name}' is not inheritable");
 
 				// define reusable setting 'parent' source
-				parentDefinitionSource =
-					new DefinitionSource(DefinitionSourceType.ParentEntityType, purposeDefinition.ParentEntityType);
+				parentSettingDefinitionSource =
+					new SettingDefinitionSource(DefinitionSourceType.ParentEntityType, purposeDefinition.ParentEntityType);
 			}
 
 			#region resolve 'effective' SettingSchemas
@@ -160,7 +160,7 @@ namespace Settings.Schema
 						settingDefinition.Name,
 						new SettingSchema()
 						{
-							Source = selfDefinitionSource,
+							Source = selfSettingDefinitionSource,
 							Definition = settingDefinition,
 							Inheritable = inheritable && (inheritableSettings?.Contains(settingDefinition.Name) ?? true)
 						}
@@ -203,8 +203,8 @@ namespace Settings.Schema
 								{
 									// determine whether source is direct parent or inherited by parent
 									Source = settingSchema.Source.Type == DefinitionSourceType.EntityType
-												? parentDefinitionSource
-												: new DefinitionSource(DefinitionSourceType.ParentEntityType, parentSchema.Info.Name, settingSchema.Source),
+												? parentSettingDefinitionSource
+												: new SettingDefinitionSource(DefinitionSourceType.ParentEntityType, parentSchema.Info.Name, settingSchema.Source),
 									Definition = settingDefinition,
 									Inheritable = inheritable &&
 												(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
@@ -252,8 +252,8 @@ namespace Settings.Schema
 							{
 								// determine whether source is direct parent or inherited by parent
 								Source = settingSchema.Source.Type == DefinitionSourceType.EntityType
-											? parentDefinitionSource
-											: new DefinitionSource(DefinitionSourceType.ParentEntityType, parentSchema.Info.Name, settingSchema.Source),
+											? parentSettingDefinitionSource
+											: new SettingDefinitionSource(DefinitionSourceType.ParentEntityType, parentSchema.Info.Name, settingSchema.Source),
 								Definition = settingDefinition,
 								Inheritable = inheritable &&
 											(inheritableSettings?.Contains(settingDefinition.Name) ?? true)
@@ -272,8 +272,7 @@ namespace Settings.Schema
 					new EntityPurposeSchema()
 					{
 						Definition = purposeDefinition,
-						Settings = settingDefinitions,
-						Source = selfDefinitionSource
+						Settings = settingDefinitions
 					}
 				);
 		}
@@ -316,11 +315,11 @@ namespace Settings.Schema
 				new Dictionary<string, EntityPurposeSchema>(purposes.Count());
 
 			// define reusable setting 'self' source
-			DefinitionSource selfDefinitionSource = new DefinitionSource(DefinitionSourceType.EntityType, name);
+			SettingDefinitionSource selfSettingDefinitionSource = new SettingDefinitionSource(DefinitionSourceType.EntityType, name);
 
 			foreach(EntityPurposeDefinition purposeDefinition in purposes)
 			{
-				ResolvePurposeSchema(purposeDefinition, entityTypePurposes, selfDefinitionSource);
+				ResolvePurposeSchema(purposeDefinition, entityTypePurposes, selfSettingDefinitionSource);
 			}
 
 			entityTypes.Add(

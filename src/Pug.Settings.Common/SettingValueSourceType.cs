@@ -10,6 +10,9 @@ namespace Settings
 		/// </summary>
 		Default = 1,
 		
+		/// <summary>
+		/// Value of effective setting was obtained from parent
+		/// </summary>
 		Parent = 2,
 		
 		/// <summary>

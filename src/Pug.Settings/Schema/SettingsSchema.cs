@@ -28,7 +28,7 @@ namespace Settings.Schema
 			return _purposes.Values;
 		}
 
-		public IEntityType GetEntityType(string name)
+		public IEntityTypeSchema GetEntityType(string name)
 		{
 			if(string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));

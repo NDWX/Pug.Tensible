@@ -80,10 +80,10 @@ namespace Settings.Schema
 
 			Setting setting = _settingStore.GetSetting(entity, purpose, name);
 
-			return resolveSetting(entityType, purpose, settingSchema, setting);
+			return resolveSetting(entityType, entity.Identifier, purpose, settingSchema, setting);
 		}
 
-		private Setting resolveSetting(EntityTypeSchema entityType, string purpose, ISettingSchema schema,
+		private Setting resolveSetting(EntityTypeSchema entityType, string entityIdentifier, string purpose, ISettingSchema schema,
 											Setting setting)
 		{
 			SettingDefinition settingDefinition = schema.Definition;
@@ -114,8 +114,14 @@ namespace Settings.Schema
 				IEntityPurposeSchema purposeSchema = entityType.GetPurpose(purpose);
 
 				string parentEntityIdentifier =
-					_entityRelationshipResolver.GetEntityParent(new EntityIdentifier(),
-																purposeSchema.Definition.ParentEntityType);
+					_entityRelationshipResolver.GetEntityParent(
+						new EntityIdentifier()
+						{
+							Type = entityType.Info.Name,
+							Identifier = entityIdentifier
+						},
+						purposeSchema.Definition.ParentEntityType
+					);
 
 				EntityIdentifier parentEntity = new EntityIdentifier()
 					{Type = purposeSchema.Definition.ParentEntityType, Identifier = parentEntityIdentifier};
@@ -139,9 +145,8 @@ namespace Settings.Schema
 					Value = parentSetting.Value,
 					ValueSource = new SettingValueSource(
 							valueSourceType, 
-							parentSetting.ValueSource.EntityType,
-							(parentSetting.ValueSource.Type & SettingValueSourceType.Parent) == SettingValueSourceType.Parent?
-								parentSetting.ValueSource.Source : null
+							parentEntity,
+							parentSetting.ValueSource
 					)
 				};
 			}
@@ -197,7 +202,7 @@ namespace Settings.Schema
 				if( storedSettings.ContainsKey(schema.Definition.Name) )
 					setting = storedSettings[schema.Definition.Name];
 
-				resolvedSettings.Add(schema.Definition.Name, resolveSetting(entityType, purpose, schema, setting));
+				resolvedSettings.Add(schema.Definition.Name, resolveSetting(entityType, entity.Identifier, purpose, schema, setting));
 			}
 
 			return resolvedSettings;

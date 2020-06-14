@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace Settings
 {
+	/// <summary>
+	/// Interface for effective setting/s resolver
+	/// </summary>
 	public interface IResolver
 	{
 		/// <summary>

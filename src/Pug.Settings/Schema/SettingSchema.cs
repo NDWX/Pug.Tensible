@@ -2,7 +2,7 @@
 {
 	class SettingSchema : ISettingSchema
 	{
-		public DefinitionSource Source { get; set; }
+		public SettingDefinitionSource Source { get; set; }
 		
 		public bool Inheritable { get; set; }
 		

@@ -5,13 +5,13 @@ namespace Settings.Schema
 	/// <summary>
 	/// Represents an entity type schema
 	/// </summary>
-	public interface IEntityType
+	public interface IEntityTypeSchema
 	{
 		/// <summary>
 		/// Gets info of the entity type
 		/// </summary>
 		/// <returns>Info of the entity type</returns>
-		EntityTypeInfo GetInfo();
+		EntityTypeInfo GetEntityTypeInfo();
 
 		/// <summary>
 		/// Get infos for all purposes within the entity type
