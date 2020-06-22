@@ -20,6 +20,11 @@ namespace Settings.Schema
 		/// </summary>
 		public IEnumerable<string> ApplicableSettings { get; }
 
+		/// <summary>
+		/// Construct entity type purpose settings inheritance settings.
+		/// </summary>
+		/// <param name="inheritanceType">Whether settings may/will be inherited</param>
+		/// <param name="applicableSettings">List of settings that may/will be or excluded from inheritance </param>
 		public PurposeSettingsInheritance(PurposeSettingsInheritanceType inheritanceType, IEnumerable<string> applicableSettings = null)
 		{
 			InheritanceType = inheritanceType;

@@ -10,13 +10,23 @@ namespace Settings.Schema
 	/// </summary>
 	public class SchemaBuilder : ISchemaBuilder
 	{
+		private readonly object schemaSync = new object();
 		private readonly Dictionary<string, EntityTypeSchema> entityTypes;
 		private readonly Dictionary<string, PurposeInfo> purposes;
+		private SettingsSchema settingsSchema;
+
+		private bool schemaIsFinal = false;
 
 		public SchemaBuilder()
 		{
 			purposes = new Dictionary<string, PurposeInfo>();
 			entityTypes = new Dictionary<string, EntityTypeSchema>();
+		}
+
+		private void EnsureSchemaNotFinal()
+		{
+				if(schemaIsFinal)
+					throw new InvalidOperationException("Schema has been built and cannot be modified.");
 		}
 
 		#region ISchemaBuilder Members
@@ -28,31 +38,37 @@ namespace Settings.Schema
 		/// <param name="description">Description of purpose</param>
 		/// <returns>The same instance of this class</returns>
 		/// <exception cref="ArgumentException">Name or description is null or empty</exception>
+		/// <exception cref="InvalidOperationException">Schema was already built</exception>
 		/// <exception cref="DuplicateNameException">Name of purpose has already been used by another purpose</exception>
 		public ISchemaBuilder RegisterPurpose(string name, string description)
 		{
 			#region input validation
-			
+
 			if(string.IsNullOrWhiteSpace(name))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(name));
 
 			#endregion
-			
+
 			#region input clean-up
-			
+
 			name = name.Trim();
-			
-			if(description == null) 
+
+			if(description == null)
 				description = string.Empty;
-			else 
+			else
 				description = description.Trim();
 
 			#endregion
-			
-			if(purposes.ContainsKey(name))
-				throw new DuplicateNameException();
 
-			purposes.Add(name, new PurposeInfo(name, description));
+			lock(schemaSync)
+			{
+				EnsureSchemaNotFinal();
+
+				if(purposes.ContainsKey(name))
+					throw new DuplicateNameException();
+
+				purposes.Add(name, new PurposeInfo(name, description));
+			}
 
 			return this;
 		}
@@ -285,6 +301,7 @@ namespace Settings.Schema
 		/// <param name="purposeSettings">Entity purposes and settings</param>
 		/// <returns>The same instance of this class</returns>
 		/// <exception cref="ArgumentException"></exception>
+		/// <exception cref="InvalidOperationException">Schema was already built</exception>
 		/// <exception cref="DuplicateNameException">Entity, or purpose within entity or setting within a purpose is duplicated</exception>
 		/// <exception cref="UnknownPurpose">Purpose has not been pre-registered using <see cref="RegisterPurpose">RegisterPurpose</see></exception>
 		public ISchemaBuilder RegisterEntityType(string name, string description,
@@ -308,27 +325,34 @@ namespace Settings.Schema
 
 			#endregion
 
-			if(entityTypes.ContainsKey(name))
-				throw new DuplicateNameException();
-
-			IDictionary<string, EntityPurposeSchema> entityTypePurposes =
-				new Dictionary<string, EntityPurposeSchema>(purposes.Count());
-
-			// define reusable setting 'self' source
-			SettingDefinitionSource selfSettingDefinitionSource = new SettingDefinitionSource(DefinitionSourceType.EntityType, name);
-
-			foreach(EntityPurposeDefinition purposeDefinition in purposes)
+			lock(schemaSync)
 			{
-				ResolvePurposeSchema(purposeDefinition, entityTypePurposes, selfSettingDefinitionSource);
-			}
+				EnsureSchemaNotFinal();
+				
+				if(entityTypes.ContainsKey(name))
+					throw new DuplicateNameException();
 
-			entityTypes.Add(
-					name,
-					new EntityTypeSchema(
-						new EntityTypeInfo(name, description),
-						this.purposes,
-						entityTypePurposes)
-				);
+				IDictionary<string, EntityPurposeSchema> entityTypePurposes =
+					new Dictionary<string, EntityPurposeSchema>(purposes.Count());
+
+				// define reusable setting 'self' source
+				SettingDefinitionSource selfSettingDefinitionSource =
+					new SettingDefinitionSource(DefinitionSourceType.EntityType, name);
+
+				foreach(EntityPurposeDefinition purposeDefinition in purposes)
+				{
+					ResolvePurposeSchema(purposeDefinition, entityTypePurposes, selfSettingDefinitionSource);
+				}
+
+				entityTypes.Add(
+						name,
+						new EntityTypeSchema(
+							new EntityTypeInfo(name, description),
+							this.purposes,
+							entityTypePurposes)
+					);
+
+			}
 
 			return this;
 		}
@@ -339,7 +363,16 @@ namespace Settings.Schema
 		/// <returns>An instance of <see cref="ISettingsSchema">ISettingSchema</see> which represents the overall settings schema</returns>
 		public ISettingsSchema Build()
 		{
-			return new SettingsSchema(purposes, entityTypes);
+			lock(schemaSync)
+			{
+				if(!schemaIsFinal)
+				{
+					settingsSchema = new SettingsSchema(purposes, entityTypes);
+					schemaIsFinal = true;
+				}
+			}
+
+			return settingsSchema;
 		}
 
 		#endregion

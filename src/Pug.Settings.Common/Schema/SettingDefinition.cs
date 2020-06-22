@@ -5,7 +5,7 @@
 	/// </summary>
 	public class SettingDefinition : ElementInfo
 	{
-		public SettingDefinition(string name, string description, bool hasDefaultValue, string defaultValue = null)
+		public SettingDefinition(string name, string description, bool hasDefaultValue = false, string defaultValue = null)
 			: base(name, description)
 		{
 			HasDefaultValue = hasDefaultValue;

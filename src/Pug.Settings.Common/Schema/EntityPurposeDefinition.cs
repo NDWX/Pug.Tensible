@@ -43,8 +43,8 @@ namespace Settings.Schema
 		/// <param name="settings">Definition of settings within a purpose</param>
 		/// <param name="inheritability">An entity may choose to only allow or block inheritance of certain settings by child entity</param>
 		public EntityPurposeDefinition(string name, string parentEntityType, 
-										PurposeSettingsInheritance inheritance, 
-										IEnumerable<SettingDefinition> settings, 
+										PurposeSettingsInheritance inheritance = null, 
+										IEnumerable<SettingDefinition> settings = null, 
 										PurposeSettingsInheritance inheritability = null)
 		{
 			Name = name?.Trim() ?? throw new ArgumentNullException(nameof(name));
@@ -54,10 +54,7 @@ namespace Settings.Schema
 				Inheritance = null;
 			else
 			{
-				if( inheritance != null )
-					Inheritance = inheritance;
-				else
-					Inheritance = new PurposeSettingsInheritance(PurposeSettingsInheritanceType.Inherit);
+				Inheritance = inheritance?? new PurposeSettingsInheritance(PurposeSettingsInheritanceType.Inherit);
 			}
 
 			Settings = settings ?? new SettingDefinition[0];
