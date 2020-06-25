@@ -9,6 +9,6 @@ namespace UnitTests
 
 		public ISettingsSchema Schema { get; set; }
 
-		public IResolver Resolver { get; set; }
+		public ISettingsResolver SettingsResolver { get; set; }
 	}
 }

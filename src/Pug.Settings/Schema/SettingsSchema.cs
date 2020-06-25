@@ -41,9 +41,9 @@ namespace Settings.Schema
 			return _entityTypes[name];
 		}
 
-		public IResolver GetResolver(ISettingStore settingStore, IEntityRelationshipResolver entityRelationshipResolver)
+		public ISettingsResolver GetResolver(ISettingStore settingStore, IEntityRelationshipResolver entityRelationshipResolver)
 		{
-			return new Resolver(this, settingStore, entityRelationshipResolver);
+			return new SettingsResolver(this, settingStore, entityRelationshipResolver);
 		}
 
 		#endregion

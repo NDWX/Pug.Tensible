@@ -9,13 +9,13 @@ namespace Settings.Schema
 	/// <summary>
 	/// Responsible for resolving effective settings based on schema and settings stored in ISettingStore
 	/// </summary>
-	class Resolver : IResolver
+	class SettingsResolver : ISettingsResolver
 	{
 		private readonly ISettingsSchema _settingsSchema;
 		private readonly ISettingStore _settingStore;
 		private readonly IEntityRelationshipResolver _entityRelationshipResolver;
 
-		public Resolver(ISettingsSchema settingsSchema,
+		public SettingsResolver(ISettingsSchema settingsSchema,
 						ISettingStore settingStore, IEntityRelationshipResolver entityRelationshipResolver)
 		{
 			_settingsSchema = settingsSchema;

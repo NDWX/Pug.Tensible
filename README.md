@@ -103,14 +103,20 @@ ISettingsSchema settingsSchema = builder.Build();
 
 Based on the exmple above, '*User*' entity type declares two purposes that inherits settings from '*Organization*' entity type.
 
-Settings are inherited by purpose, which means an entity type purpose can only inherit settings of the same purpose from another entity type.
-
 Following the concept of inheritance mentioned above, *User* _default_ purpose (purpose with empty name) will effectively have 'DisplayName' setting that is inherited from '*Organization*' entity type and 'EmailAddress' setting which is declared within '*User*' entity type itself, and '_UserInterface_' purpose of '*User*' entity type will inherit all settings declared within '_UserInterface_' purpose of '*Organization*'.
 
 ### Setting Resolution
+This library does not prescribe how settings are stored, although it promotes storage of each setting as its own record within a database or property within a document in case of NoSql database.
+
+A settings resolver may be obtained from schema built from an _ISchemaBuilder_ implementation by providing implementations of _ISettingStore_ and _IEntityRelationshipResolver_ interfaces to the schema's _GetResolver_ function.
+
+Settings resolver uses a setting store to retrieve stored settings regardless of storage implementation and structure. Implementation of _IentityRelationshipResolver_ allows settings resolver to determine parent entity identifier of an entity, e.g. User 'John' belongs in organization 'Acme Pty Ltd'.
+
+In a multi-tenant application, a setting resolver may be created for each tenant from one global schema.
+ 
 Settings may be resolved as follow:
 ```c#
-Resolver resolver = new Resolver(settingsSchema, settingStore: settingStore);
+Resolver resolver = settingsSchema.GetResolver(settingStore: settingStore, entityRelationshipResolver: entityRelationshipResolver);
 
 Setting setting = resolver.ResolveSetting(
     entity: new EntityIdentifier { Identifier = "John", Type = "User" },
@@ -119,8 +125,15 @@ Setting setting = resolver.ResolveSetting(
 );
 ```
 
-The example above will return setting value for *user* 'John' if exists in *settingStore*, otherwise the default value 'Light' will be returned.
-
+Settings are resolved as follow:
+1. Obtain stored value of setting 'Theme' for the purpose of 'UserInterface' for user 'John'
+2. Return value returned by setting store if exists, otherwise
+3. If 'Theme' setting is declared by 'User' entity type:
+    - Return default value of 'Theme' setting if exists
+4. If 'Theme' setting is inherited from parent:
+    - Determine identifier of parent entity type, which in this case is 'Organization'
+    - Start from step 1 for identified parent entity
+    
 ### Planned Features
 - User specified setting _default_ value
 - Reference implementations of **ISettingsStore**

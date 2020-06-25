@@ -326,7 +326,7 @@ namespace UnitTests
 		{
 			context.Schema = context.Builder.Build();
 
-			context.Resolver = context.Schema.GetResolver(new DummySettingStore(), new DummyEntityRelationshipResolver());
+			context.SettingsResolver = context.Schema.GetResolver(new DummySettingStore(), new DummyEntityRelationshipResolver());
 
 			Assert.NotNull(context.Schema);
 		}
@@ -462,7 +462,7 @@ namespace UnitTests
 		public void ShouldErrorIfUnknownSettingRequested(string type, string identifier, string purpose, string name)
 		{
 			Assert.Throws<UnknownSetting>(
-					() => context.Resolver.ResolveSetting(
+					() => context.SettingsResolver.ResolveSetting(
 						new EntityIdentifier {Identifier = identifier, Type = type},
 						purpose,
 						name)
@@ -473,7 +473,7 @@ namespace UnitTests
 		[Order(60)]
 		public void ShouldGetNullIfSettingNotStoredAndNoDefaultSpecified()
 		{
-			Setting setting = context.Resolver.ResolveSetting(
+			Setting setting = context.SettingsResolver.ResolveSetting(
 				new EntityIdentifier {Identifier = "FirstEntity", Type = "FirstType"},
 				"Purpose1",
 				"Setting4");
@@ -485,7 +485,7 @@ namespace UnitTests
 		[Order(60)]
 		public void ShouldReturnSettingDefaultIfNotExistInStore()
 		{
-			Setting setting = context.Resolver.ResolveSetting(
+			Setting setting = context.SettingsResolver.ResolveSetting(
 				new EntityIdentifier {Identifier = "SecondEntity", Type = "FirstType"},
 				"Purpose1",
 				"Setting1");
@@ -499,7 +499,7 @@ namespace UnitTests
 		[Order(60)]
 		public void ShouldReturnSpecifiedSettingFromStoreIfExists()
 		{
-			Setting setting = context.Resolver.ResolveSetting(
+			Setting setting = context.SettingsResolver.ResolveSetting(
 				new EntityIdentifier {Identifier = "FirstEntity", Type = "FirstType"},
 				"Purpose1",
 				"Setting1");
@@ -513,7 +513,7 @@ namespace UnitTests
 		[Order(60)]
 		public void PurposeLevelSettingsResolutionBehaviourShouldBeConsistentWithSettingLevelResolution()
 		{
-			IDictionary<string, Setting> settings = context.Resolver.ResolveSettings(
+			IDictionary<string, Setting> settings = context.SettingsResolver.ResolveSettings(
 				new EntityIdentifier
 					{Identifier = "FirstEntity", Type = "FirstType"},
 				"Purpose1");
@@ -533,7 +533,7 @@ namespace UnitTests
 		[Order(61)]
 		public void DefaultValueInheritanceShouldWork()
 		{
-			Setting setting = context.Resolver.ResolveSetting(
+			Setting setting = context.SettingsResolver.ResolveSetting(
 				new EntityIdentifier
 					{Identifier = "ThirdEntity", Type = "ThirdType"},
 				"Purpose1", "Setting1");
@@ -547,7 +547,7 @@ namespace UnitTests
 		[Order(61)]
 		public void SettingValueInheritanceShouldWork()
 		{
-			Setting setting = context.Resolver.ResolveSetting(
+			Setting setting = context.SettingsResolver.ResolveSetting(
 				new EntityIdentifier
 					{Identifier = "ThirdEntity", Type = "ThirdType"},
 				"Purpose1", "Setting3");

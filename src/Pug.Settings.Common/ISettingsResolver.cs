@@ -6,7 +6,7 @@ namespace Settings
 	/// <summary>
 	/// Interface for effective setting/s resolver
 	/// </summary>
-	public interface IResolver
+	public interface ISettingsResolver
 	{
 		/// <summary>
 		/// Resolve all effective settings within a purpose for the specified entity.
