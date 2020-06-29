@@ -52,7 +52,7 @@ Avoid repetitive settings declaration that can be inherited by one entity type f
 
 Settings of an entity type (parent) may be inherited by another entity type (child) when the child entity type declares a purpose of the same name as that in the parent entity type and specifying the parent entity type name as the *parent*. In short, settings are not inherited at entity type level like class/type members inheritance as in most programming languages, but rather at *purpose* level.
 
-When a child entity type *purpose* inherits settings from a parent entity type, it inherits the setting definition. An instance of the child entity type may also inherit setting value from relevant instance of the parent entity type.
+When a child entity type *purpose* inherits settings from a parent entity type, it inherits setting definitions from within the same purpose. An instance of the child entity type may also inherit setting value from relevant instance of the parent entity type.
 
 Consider the code below which builds on entity settings registration example above:
 ```c#
@@ -110,7 +110,7 @@ This library does not prescribe how settings are stored, although it promotes st
 
 A settings resolver may be obtained from schema built from an _ISchemaBuilder_ implementation by providing implementations of _ISettingStore_ and _IEntityRelationshipResolver_ interfaces to the schema's _GetResolver_ function.
 
-Settings resolver uses a setting store to retrieve stored settings regardless of storage implementation and structure. Implementation of _IentityRelationshipResolver_ allows settings resolver to determine parent entity identifier of an entity, e.g. User 'John' belongs in organization 'Acme Pty Ltd'.
+Settings resolver uses a setting store to retrieve stored settings regardless of storage implementation and structure. Implementation of _IEntityRelationshipResolver_ allows settings resolver to determine parent entity identifier of an entity, e.g. User 'John' belongs in organization 'Acme Pty Ltd'.
 
 In a multi-tenant application, a setting resolver may be created for each tenant from one global schema.
  
