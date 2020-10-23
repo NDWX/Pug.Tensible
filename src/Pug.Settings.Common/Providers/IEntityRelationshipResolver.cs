@@ -11,6 +11,6 @@
 		/// <param name="entity">Child entity</param>
 		/// <param name="parentType">Parent entity type</param>
 		/// <returns></returns>
-		string GetEntityParent(EntityIdentifier entity, string parentType);
+		string GetEntityParent(EntityIdentifier entity, string parentType, string purpose = null);
 	}
 }

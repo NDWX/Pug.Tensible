@@ -1,32 +1,23 @@
-﻿namespace Settings
-{
-	/// <summary>
-	/// Represent an effective setting
-	/// </summary>
-	public class Setting
-	{
-		/// <summary>
-		/// Purpose of setting
-		/// </summary>
-		public string Purpose { get; set; }
-		
-		/// <summary>
-		/// Name of setting
-		/// </summary>
-		public string Name { get; set; }
-		
-		/// <summary>
-		/// Source of setting <see cref="Value">value</see>
-		/// </summary>
-		public SettingValueSource ValueSource { get; set; }
-		
-		/// <summary>
-		/// Resolved value of setting
-		/// </summary>
-		public string Value { get; set; }
+﻿using System;
+using Settings;
 
-		// public DateTime LastUpdateTimestamp { get; set; }
-		//
-		// public string LastUpdateUser { get; set; }
+namespace Pug.Settings
+{
+	public class Setting<TValue> : ISetting
+	{
+		public TValue Value { get; }
+
+		// ReSharper disable HeapView.PossibleBoxingAllocation
+		object ISetting.ValueObject => Value;
+		// ReSharper restore HeapView.PossibleBoxingAllocation
+		
+		public SettingValueSource ValueSource { get; }
+
+		public Setting(TValue value, SettingValueSource valueSource)
+		{
+			Value = value;
+			ValueSource = valueSource ?? throw new ArgumentNullException(nameof(valueSource));
+		}
 	}
+	
 }

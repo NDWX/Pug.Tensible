@@ -13,6 +13,28 @@
 		<PackageProjectUrl>https://github.com/NDWX/Pug.Settings</PackageProjectUrl>
 		<PackageLicenseUrl>https://www.gnu.org/licenses/agpl-3.0.txt</PackageLicenseUrl>
 		<RepositoryUrl>https://github.com/NDWX/Pug.Settings</RepositoryUrl>
+		<LangVersion>8</LangVersion>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Pug.Effable" Version="1.0.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="ISettingStore.cs" />
+	  <Compile Remove="ISettingsResolver.cs" />
+	  <Compile Remove="Schema\DefinitionSourceType.cs" />
+	  <Compile Remove="Schema\ElementInfo.cs" />
+	  <Compile Remove="Schema\EntityPurposeDefinition.cs" />
+	  <Compile Remove="Schema\EntityTypeInfo.cs" />
+	  <Compile Remove="Schema\IEntityPurposeSchema.cs" />
+	  <Compile Remove="Schema\IEntityTypeSchema.cs" />
+	  <Compile Remove="Schema\ISchemaBuilder.cs" />
+	  <Compile Remove="Schema\ISettingSchema.cs" />
+	  <Compile Remove="Schema\PurposeInfo.cs" />
+	  <Compile Remove="Schema\SettingDefinition.cs" />
+	  <Compile Remove="Schema\SettingDefinitionSource.cs" />
+	  <Compile Remove="Schema\PurposeSettingsInheritance.cs" />
+	</ItemGroup>
 
 </Project>

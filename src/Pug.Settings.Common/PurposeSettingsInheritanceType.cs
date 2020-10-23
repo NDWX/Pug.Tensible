@@ -2,6 +2,8 @@
 {
 	public enum PurposeSettingsInheritanceType
 	{
+		Unspecified,
+		
 		/// <summary>
 		/// Indicates setting/s are not inheritable or should be inherited
 		/// </summary>

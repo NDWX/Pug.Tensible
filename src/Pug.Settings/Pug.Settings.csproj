@@ -27,6 +27,16 @@
 
 	<ItemGroup>
 	  <Compile Remove="EntitySetting.cs" />
+	  <Compile Remove="Schema\**" />
+	  <Compile Remove="SettingsResolver.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Remove="Schema\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Schema\**" />
 	</ItemGroup>
 
 </Project>
