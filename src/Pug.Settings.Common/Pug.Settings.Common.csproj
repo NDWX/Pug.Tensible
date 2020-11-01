@@ -22,7 +22,6 @@
 
 	<ItemGroup>
 	  <Compile Remove="ISettingStore.cs" />
-	  <Compile Remove="ISettingsResolver.cs" />
 	  <Compile Remove="Schema\DefinitionSourceType.cs" />
 	  <Compile Remove="Schema\ElementInfo.cs" />
 	  <Compile Remove="Schema\EntityPurposeDefinition.cs" />

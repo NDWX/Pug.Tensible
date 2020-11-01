@@ -1,5 +1,4 @@
-﻿using Settings.Schema;
-
+﻿
 namespace Settings
 {
 	/// <summary>
