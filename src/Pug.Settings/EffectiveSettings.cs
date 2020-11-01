@@ -17,7 +17,7 @@ namespace Tensible
 		public TPurpose Settings { get; }
 		
 		public TPurpose StoredSettings { get; }
-		
+		 
 		public IDictionary<string, SettingValueSource> SettingsSource { get; }
 	}
 }
