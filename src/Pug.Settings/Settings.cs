@@ -4,41 +4,50 @@ using System.Linq.Expressions;
 
 namespace Tensible
 {
-	public class Settings<TEntity, TPurpose> : ISettings<TEntity, TPurpose> 
+	public class Settings<TEntity, TSettings> : ISettings<TEntity, TSettings>
 		where TEntity : class
-		where TPurpose : class
+		where TSettings : class
 	{
 		/*private readonly LinkedList<Func<string, TPurpose, TPurpose>> parentSettingsMapper =
 			new LinkedList<Func<string, TPurpose, TPurpose>>();*/
 
-		private readonly List<SettingsParent<TEntity, TPurpose>> parentSettings = new List<SettingsParent<TEntity, TPurpose>>();
+		private readonly List<string> parentEntities = new List<string>();
+		private readonly List<SettingsParent<TEntity, TSettings>> parentSettings =
+			new List<SettingsParent<TEntity, TSettings>>();
 
+		public IEnumerable<string> ParentEntities => parentEntities;
+		
 		public string Name { get; }
 
-		public Func<TEntity, IServiceProvider, TPurpose> SettingsAccessor { get; }
+		public Func<TEntity, IServiceProvider, TSettings> SettingsAccessor { get; }
 
-		public Settings(string name, Func<TEntity, IServiceProvider, TPurpose> settingsAccessor)
+		public Settings(string name, Func<TEntity, IServiceProvider, TSettings> settingsAccessor)
 		{
 			Name = name ?? throw new ArgumentNullException(nameof(name));
 			SettingsAccessor = settingsAccessor ?? throw new ArgumentNullException(nameof(settingsAccessor));
 		}
 
-		public Settings(Func<TEntity, IServiceProvider, TPurpose> settingsAccessor) : this(typeof(TPurpose).FullName, settingsAccessor)
+		public Settings(Func<TEntity, IServiceProvider, TSettings> settingsAccessor)
+			: this(typeof(TSettings).FullName, settingsAccessor)
 		{
 		}
 
-		private void AddSettingsParent<TParentEntity, TParentSettings>(string parentEntityType,
-																		string parentSettingsPurposeName,
-																		Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper, Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-																		Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap)
+		#region Stepped parent settings mapping
+		
+		private void AddSettingsParent<TParentEntity, TParentSettings>(
+			string parentEntityType,
+			string parentSettingsPurposeName,
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMap,
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap)
 		{
-			Func<TEntity, TPurpose, IServiceProvider, TPurpose> lambda = (entity, baseSettings, serviceProvider) =>
+			Func<TEntity, TSettings, IServiceProvider, TSettings> lambda = (entity, baseSettings, serviceProvider) =>
 			{
-				TParentEntity parentEntity = entityParentMapper(entity, serviceProvider);
+				var parentEntity = entityParentMap(entity, serviceProvider);
 
 				if(parentEntity != null)
 				{
-					TParentSettings parentSettings = settingsAccessor(parentEntity, serviceProvider);
+					TParentSettings parentSettings = parentSettingsAccessor(parentEntity, serviceProvider);
 
 					if(parentSettings != null) return settingsMap(baseSettings, parentSettings, serviceProvider);
 				}
@@ -47,24 +56,28 @@ namespace Tensible
 			};
 
 			parentSettings.Add(
-					new SettingsParent<TEntity, TPurpose>(parentEntityType, parentSettingsPurposeName, lambda)
+					new SettingsParent<TEntity, TSettings>(parentEntityType, parentSettingsPurposeName, lambda)
 				);
+				
+			if( !parentEntities.Contains(parentEntityType))
+				parentEntities.Add(parentEntityType);
 		}
 
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			string parentSettingsPurposeName,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap)
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap)
 		{
 			if(parentSettingsPurposeName == null) throw new ArgumentNullException(nameof(parentSettingsPurposeName));
-			if(settingsAccessor == null) throw new ArgumentNullException(nameof(settingsAccessor));
+			if(parentSettingsAccessor == null) throw new ArgumentNullException(nameof(parentSettingsAccessor));
 			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
 			if(string.IsNullOrWhiteSpace(parentEntityType))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(parentEntityType));
-			
-			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
+
+			AddSettingsParent(
+				parentEntityType, parentSettingsPurposeName, entityParentMapper, parentSettingsAccessor, settingsMap);
 
 			/*
 			ParameterExpression entityParameterExpression =
@@ -133,10 +146,102 @@ namespace Tensible
 			return this;
 		}
 
-		private static Func<TParentEntity, IServiceProvider, TParentSettings> GetParentSettingAccessor<TParentEntity, TParentSettings>(
-			string parentEntityType, string parentSettingsPurposeName, bool useEffectiveSettings = true) where TParentSettings : class
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			string parentEntityType,
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		)
+		{
+			return BasedOn<TParentEntity, TParentSettings>(parentEntityType, typeof(TParentSettings).FullName,
+															entityParentMapper, parentSettingsAccessor, settingsMap);
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		)
+		{
+			return BasedOn(typeof(TParentEntity).FullName, typeof(TParentSettings).FullName, entityParentMapper,
+							parentSettingsAccessor, settingsMap);
+		}
+		
+		#endregion
+
+		#region Custom parent settings mapping
+		
+		private void AddSettingsParent<TParentSettings>(
+			string parentEntityType,
+			string parentSettingsPurposeName,
+			Func<TEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap)
+		{
+			Func<TEntity, TSettings, IServiceProvider, TSettings> lambda = (entity, baseSettings, serviceProvider) =>
+			{
+				TParentSettings parentSettings = parentSettingsAccessor(entity, serviceProvider);
+
+				if(parentSettings != null) return settingsMap(baseSettings, parentSettings, serviceProvider);
+
+				return baseSettings;
+			};
+
+			parentSettings.Add(
+					new SettingsParent<TEntity, TSettings>(parentEntityType, parentSettingsPurposeName, lambda)
+				);
+				
+			if( !parentEntities.Contains(parentEntityType))
+				parentEntities.Add(parentEntityType);
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentSettings>(
+			string parentEntityType,
+			string parentSettingsPurposeName,
+			Func<TEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap)
+		{
+			if(parentSettingsPurposeName == null) throw new ArgumentNullException(nameof(parentSettingsPurposeName));
+			if(parentSettingsAccessor == null) throw new ArgumentNullException(nameof(parentSettingsAccessor));
+			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
+			if(string.IsNullOrWhiteSpace(parentEntityType))
+				throw new ArgumentException("Value cannot be null or whitespace.", nameof(parentEntityType));
+
+			AddSettingsParent(
+				parentEntityType, parentSettingsPurposeName, parentSettingsAccessor, settingsMap);
+
+			return this;
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			string parentEntityType,
+			Func<TEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		)
+		{
+			return BasedOn<TParentSettings>(parentEntityType, typeof(TParentSettings).FullName, 
+															parentSettingsAccessor, settingsMap);
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			Func<TEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		)
+		{
+			return BasedOn(typeof(TParentEntity).FullName, typeof(TParentSettings).FullName,
+							parentSettingsAccessor, settingsMap);
+		}
+
+		#endregion
+		
+		#region Auto recurse parent settings mapping
+		
+		private static Func<TParentEntity, IServiceProvider, TParentSettings> GetDefaultParentSettingAccessor<
+			TParentEntity, TParentSettings>(
+			string parentEntityType, string parentSettingsPurposeName, bool useEffectiveSettings = true)
+			where TParentSettings : class
 		{
 			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor;
+
 			if(useEffectiveSettings)
 				settingsAccessor = (entity, serviceProvider) =>
 					((IUnified) serviceProvider.GetService(typeof(IUnified)))
@@ -147,46 +252,46 @@ namespace Tensible
 					((IUnified) serviceProvider.GetService(typeof(IUnified)))
 					.GetSettings<TParentEntity, TParentSettings>(
 						parentEntityType, parentSettingsPurposeName, entity);
-			
+
 			return settingsAccessor;
 		}
 
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			string parentSettingsPurposeName,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
 			bool useEffectiveSettings,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class
 		{
 			if(parentEntityType == null) throw new ArgumentNullException(nameof(parentEntityType));
 			if(parentSettingsPurposeName == null) throw new ArgumentNullException(nameof(parentSettingsPurposeName));
 			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
 			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
-			
+
 			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
-				GetParentSettingAccessor<TParentEntity, TParentSettings>(
+				GetDefaultParentSettingAccessor<TParentEntity, TParentSettings>(
 					parentEntityType,
 					parentSettingsPurposeName,
 					useEffectiveSettings);
-			
+
 			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
 
 			return this;
 		}
 
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			string parentSettingsPurposeName,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class
 		{
 			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
-				GetParentSettingAccessor<TParentEntity, TParentSettings>(
+				GetDefaultParentSettingAccessor<TParentEntity, TParentSettings>(
 					parentEntityType,
 					parentSettingsPurposeName);
-			
+
 			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
 
 			return this;
@@ -207,119 +312,102 @@ namespace Tensible
 		}
 		
 		*/
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			string parentEntityType,
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		) where TParentSettings : class
+		{
+			if(parentEntityType == null) throw new ArgumentNullException(nameof(parentEntityType));
+			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
+			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
+
+			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
+
+			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
+				GetDefaultParentSettingAccessor<TParentEntity, TParentSettings>(
+					parentEntityType,
+					parentSettingsPurposeName);
+
+			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
+
+			return this;
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		) where TParentSettings : class
+		{
+			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
+			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
+
+			string parentEntityType = typeof(TParentEntity).FullName;
+			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
+
+			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
+				GetDefaultParentSettingAccessor<TParentEntity, TParentSettings>(
+					parentEntityType,
+					parentSettingsPurposeName);
+
+			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
+
+			return this;
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			string parentEntityType,
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
+			bool useEffectiveSettings,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		) where TParentSettings : class
+		{
+			if(parentEntityType == null) throw new ArgumentNullException(nameof(parentEntityType));
+			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
+			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
+
+			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
+
+			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
+				GetDefaultParentSettingAccessor<TParentEntity, TParentSettings>(
+					parentEntityType,
+					parentSettingsPurposeName,
+					useEffectiveSettings);
+
+			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
+
+			return this;
+		}
+
+		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
+			bool useEffectiveSettings,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
+		) where TParentSettings : class
+		{
+			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
+			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
+
+			string parentEntityType = typeof(TParentEntity).FullName;
+			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
+
+			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
+				GetDefaultParentSettingAccessor<TParentEntity, TParentSettings>(
+					parentEntityType,
+					parentSettingsPurposeName,
+					useEffectiveSettings);
+
+			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
+
+			return this;
+		}
+
+		#endregion
 		
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
-			string parentEntityType,
-			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
-		)
+		ISettingsResolver ISettingsDefinition.GetResolver(IEntityDefinition entityDefinition)
 		{
-			return BasedOn<TParentEntity, TParentSettings>(parentEntityType,  typeof(TParentSettings).FullName, entityParentMapper, settingsAccessor, settingsMap);
-		}
-
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
-			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
-		)
-		{
-			return BasedOn(typeof(TParentEntity).FullName, typeof(TParentSettings).FullName, entityParentMapper, settingsAccessor, settingsMap);
-		}
-
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
-			string parentEntityType,
-			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
-		) where TParentSettings : class
-		{
-			if(parentEntityType == null) throw new ArgumentNullException(nameof(parentEntityType));
-			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
-			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
-			
-			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
-			
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
-				GetParentSettingAccessor<TParentEntity, TParentSettings>(
-					parentEntityType,
-					parentSettingsPurposeName);
-			
-			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
-
-			return this;
-		}
-
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
-			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
-		) where TParentSettings : class
-		{
-			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
-			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
-			
-			string parentEntityType = typeof(TParentEntity).FullName;
-			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
-			
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
-				GetParentSettingAccessor<TParentEntity, TParentSettings>(
-					parentEntityType,
-					parentSettingsPurposeName);
-			
-			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
-
-			return this;
-		}
-
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
-			string parentEntityType,
-			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			bool useEffectiveSettings,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
-		) where TParentSettings : class
-		{
-			if(parentEntityType == null) throw new ArgumentNullException(nameof(parentEntityType));
-			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
-			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
-			
-			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
-			
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
-				GetParentSettingAccessor<TParentEntity, TParentSettings>(
-					parentEntityType,
-					parentSettingsPurposeName,
-					useEffectiveSettings);
-			
-			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
-
-			return this;
-		}
-
-		public ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
-			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			bool useEffectiveSettings,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
-		) where TParentSettings : class
-		{
-			if(entityParentMapper == null) throw new ArgumentNullException(nameof(entityParentMapper));
-			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
-			
-			string parentEntityType = typeof(TParentEntity).FullName;
-			string parentSettingsPurposeName = typeof(TParentSettings).FullName;
-			
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor =
-				GetParentSettingAccessor<TParentEntity, TParentSettings>(
-					parentEntityType,
-					parentSettingsPurposeName,
-					useEffectiveSettings);
-			
-			AddSettingsParent(parentEntityType, parentSettingsPurposeName, entityParentMapper, settingsAccessor, settingsMap);
-
-			return this;
-		}
-
-		ISettingsResolver ISettingsDefinition.GetResolver()
-		{
-			return new SettingsResolver<TEntity, TPurpose>(this, SettingsAccessor, parentSettings);
+			return new SettingsResolver<TEntity, TSettings>(this, SettingsAccessor, parentSettings);
 		}
 	}
 }

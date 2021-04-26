@@ -8,30 +8,67 @@ namespace Tensible
 	internal class Entity<TEntity> : IEntity<TEntity>, IEntityDefinition
 		where TEntity : class
 	{
-		private Dictionary<string, ISettingsDefinition> settings = new Dictionary<string, ISettingsDefinition>();
+		private Dictionary<string, ISettingsDefinition> _settings = new Dictionary<string, ISettingsDefinition>();
 
 		public Entity(string name)
 		{
-			this.Name = name;
+			Name = name;
 		}
 
 		public string Name { get; }
 
-		public IEntity<TEntity> With<TPurpose>(ISettings<TEntity, TPurpose> settings) where TPurpose : class
+		private void Register<TSettings>(ISettings<TEntity, TSettings> settings) where TSettings : class
+		{
+			lock(settings)
+			{
+				if(_settings.ContainsKey(settings.Name))
+					throw new DuplicateNameException($"Settings of '{settings.Name}' purpose already exists.");
+
+				_settings.Add(settings.Name, settings);
+			}
+		}
+
+		public IEntity<TEntity> With<TSettings>(ISettings<TEntity, TSettings> settings) where TSettings : class
 		{
 			if(settings == null) throw new ArgumentNullException(nameof(settings));
 
-			lock(settings)
-			{
-				if(this.settings.ContainsKey(settings.Name))
-					throw new DuplicateNameException($"Settings of name '{settings.Name}' already exists.");
-
-				this.settings.Add(settings.Name, settings);
-			}
+			Register(settings);
 
 			return this;
 		}
 
-		public IDictionary<string, ISettingsDefinition> Settings => new ReadOnlyDictionary<string, ISettingsDefinition>( this.settings);
+		public IEntity<TEntity> With<TSettings>(Func<TEntity, IServiceProvider, TSettings> settingsAccessor,
+												Action<ISettings<TEntity, TSettings>> configurator)
+			where TSettings : class
+		{
+			if(settingsAccessor == null) throw new ArgumentNullException(nameof(settingsAccessor));
+			
+			Settings<TEntity, TSettings> settings = new Settings<TEntity, TSettings>(typeof(TSettings).FullName, settingsAccessor);
+
+			configurator?.Invoke(settings);
+
+			Register(settings);
+			
+			return this;
+		}
+
+		public IEntity<TEntity> With<TSettings>(string name,
+												Func<TEntity, IServiceProvider, TSettings> settingsAccessor,
+												Action<ISettings<TEntity, TSettings>> configurator)
+			where TSettings : class
+		{
+			if(settingsAccessor == null) throw new ArgumentNullException(nameof(settingsAccessor));
+			
+			Settings<TEntity, TSettings> settings = new Settings<TEntity, TSettings>(name, settingsAccessor);
+
+			configurator?.Invoke(settings);
+
+			Register(settings);
+			
+			return this;
+		}
+
+
+		public IDictionary<string, ISettingsDefinition> Settings => new ReadOnlyDictionary<string, ISettingsDefinition>( _settings);
 	}
 }

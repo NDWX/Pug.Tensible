@@ -2,7 +2,7 @@
 
 namespace Tensible
 {
-	internal interface IEntityDefinition
+	public interface IEntityDefinition
 	{
 		string Name { get; }
 		

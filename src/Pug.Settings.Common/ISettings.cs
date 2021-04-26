@@ -2,69 +2,69 @@
 
 namespace Tensible
 {
-	public interface ISettings<TEntity, TPurpose> : ISettingsDefinition
+	public interface ISettings<TEntity, TSettings> : ISettingsDefinition
 		where TEntity : class 
-		where TPurpose : class
+		where TSettings : class
 	{
-		Func<TEntity, IServiceProvider, TPurpose> SettingsAccessor { get; }
+		Func<TEntity, IServiceProvider, TSettings> SettingsAccessor { get; }
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			string parentSettingsPurposeName,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap);
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap);
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			string parentSettingsPurposeName,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
 			bool useEffectiveSettings,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class;
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			string parentSettingsPurposeName,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class;
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		);
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TParentEntity, IServiceProvider, TParentSettings> settingsAccessor,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TParentEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		);
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class;
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class;
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
 			bool useEffectiveSettings,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class;
 
-		ISettings<TEntity, TPurpose> BasedOn<TParentEntity, TParentSettings>(
+		ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			Func<TEntity, IServiceProvider, TParentEntity> entityParentMapper,
 			bool useEffectiveSettings,
-			Func<TPurpose, TParentSettings, IServiceProvider, TPurpose> settingsMap
+			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		) where TParentSettings : class;
 	}
 }

@@ -4,6 +4,6 @@
 	{
 		string Name { get; }
 
-		ISettingsResolver GetResolver();
+		ISettingsResolver GetResolver(IEntityDefinition entityDefinition);
 	}
 }

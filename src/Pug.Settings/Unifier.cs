@@ -9,7 +9,6 @@ namespace Tensible
 	public class Unifier : IUnifier
 	{
 		private readonly IServiceCollection _serviceCollection;
-		private IServiceProvider serviceProvider;
 		private readonly Dictionary<string, IEntityDefinition> entities = new Dictionary<string, IEntityDefinition>();
 
 		public Unifier(IServiceCollection serviceCollection)
@@ -56,7 +55,7 @@ namespace Tensible
 			{
 				entityTypes.Add(entity.Name,
 								entity.Settings.ToDictionary(x => x.Key,
-															x => x.Value.GetResolver())
+															x => x.Value.GetResolver(entity))
 					);
 			}
 
