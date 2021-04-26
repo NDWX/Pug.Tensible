@@ -7,9 +7,7 @@ using Xunit;
 using Xunit.Extensions.Ordering;
 // ReSharper disable HeapView.ClosureAllocation
 
-using Tensible;
-
-namespace UnitTests
+namespace Pug.Tensible.Tests
 {
 	[TestCaseOrderer("Xunit.Extensions.Ordering.TestCaseOrderer", "Xunit.Extensions.Ordering")]
 	[SuppressMessage("ReSharper", "HeapView.DelegateAllocation")]

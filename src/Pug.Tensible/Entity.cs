@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	internal class Entity<TEntity> : IEntity<TEntity>, IEntityDefinition
 		where TEntity : class

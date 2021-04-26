@@ -1,4 +1,4 @@
-﻿namespace Tensible
+﻿namespace Pug.Tensible
 {
 	public interface IUnified
 	{

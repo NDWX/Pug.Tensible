@@ -11,6 +11,7 @@
 
 		<FileVersion>0.1.0</FileVersion>
 		<NeutralLanguage>en</NeutralLanguage>
+		<RootNamespace>UnitTests</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,12 +23,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Pug.Settings\Pug.Settings.csproj" />
+	  <Compile Remove="OrderAttribute.cs" />
+	  <Compile Remove="IndexedTestCaseOrderer.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="OrderAttribute.cs" />
-	  <Compile Remove="IndexedTestCaseOrderer.cs" />
+	  <ProjectReference Include="..\Pug.Tensible\Pug.Tensible.csproj" />
 	</ItemGroup>
 
 </Project>

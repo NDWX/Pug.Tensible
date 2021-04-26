@@ -1,6 +1,6 @@
 ﻿using Pug.Effable;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	public interface IUnifier
 	{

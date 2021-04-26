@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	public class Settings<TEntity, TSettings> : ISettings<TEntity, TSettings>
 		where TEntity : class
@@ -245,13 +245,17 @@ namespace Tensible
 			if(useEffectiveSettings)
 				settingsAccessor = (entity, serviceProvider) =>
 					((IUnified) serviceProvider.GetService(typeof(IUnified)))
-					.GetEffectiveSettings<TParentEntity, TParentSettings>(
-						parentEntityType, parentSettingsPurposeName, entity);
+						.GetEffectiveSettings<TParentEntity, TParentSettings>(
+																				parentEntityType,
+																				parentSettingsPurposeName, 
+																				entity);
 			else
 				settingsAccessor = (entity, serviceProvider) =>
 					((IUnified) serviceProvider.GetService(typeof(IUnified)))
-					.GetSettings<TParentEntity, TParentSettings>(
-						parentEntityType, parentSettingsPurposeName, entity);
+						.GetSettings<TParentEntity, TParentSettings>(
+																		parentEntityType, 
+																		parentSettingsPurposeName, 
+																		entity);
 
 			return settingsAccessor;
 		}

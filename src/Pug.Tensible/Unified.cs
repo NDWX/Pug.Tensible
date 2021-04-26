@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Settings.Schema;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	internal class Unified : IUnified
 	{

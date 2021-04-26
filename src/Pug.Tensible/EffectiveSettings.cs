@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Settings;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	public class EffectiveSettings<TPurpose> where TPurpose : class
 	{

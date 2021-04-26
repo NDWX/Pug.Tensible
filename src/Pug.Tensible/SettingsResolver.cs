@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	internal class SettingsResolver<TEntity, TPurpose> : ISettingsResolver
 		where TEntity : class

@@ -4,7 +4,7 @@ using System.Data;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	public class Unifier : IUnifier
 	{

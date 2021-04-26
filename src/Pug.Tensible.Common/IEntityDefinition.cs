@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	public interface IEntityDefinition
 	{

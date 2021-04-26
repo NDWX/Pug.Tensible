@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tensible
+namespace Pug.Tensible
 {
 	public class SettingsException : Exception
 	{
