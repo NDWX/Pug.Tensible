@@ -27,7 +27,7 @@ namespace Pug.Tensible
 			_serviceProvider = serviceCollection.BuildServiceProvider();
 		}
 		
-		ISettingsResolver GetSettings(string entityType, string purpose)
+		ISettingsResolver GetResolver(string entityType, string purpose)
 		{
 			if(!entityTypes.TryGetValue(entityType, out IDictionary<string, ISettingsResolver> entitySettings))
 				throw new UnknownEntityType();
@@ -42,14 +42,14 @@ namespace Pug.Tensible
 		{
 			ValidateSettingsCriteria(entityType, purpose, entity);
 
-			return GetSettings(entityType, purpose).GetEffective<TEntity, TPurpose>(entity, _serviceProvider) as TPurpose;
+			return GetResolver(entityType, purpose).GetEffective<TEntity, TPurpose>(entity, _serviceProvider) as TPurpose;
 		}
 		
 		public TPurpose GetSettings<TEntity, TPurpose>(string entityType, string purpose, TEntity entity) where TPurpose : class
 		{
 			ValidateSettingsCriteria(entityType, purpose, entity);
 			
-			return GetSettings(entityType, purpose).Get<TEntity, TPurpose>(entity, _serviceProvider) as TPurpose;
+			return GetResolver(entityType, purpose).Get<TEntity, TPurpose>(entity, _serviceProvider) as TPurpose;
 		}
 
 		public TPurpose GetEffectiveSettings<TEntity, TPurpose>(TEntity entity) where TPurpose : class

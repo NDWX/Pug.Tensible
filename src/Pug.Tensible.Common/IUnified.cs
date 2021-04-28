@@ -9,6 +9,7 @@
 			where TPurpose : class;
 
 		TPurpose GetSettings<TEntity, TPurpose>(TEntity entity) where TPurpose : class;
+		
 		TPurpose GetSettings<TEntity, TPurpose>(string purpose, TEntity entity) where TPurpose : class;
 
 		TPurpose GetEffectiveSettings<TEntity, TPurpose>(TEntity entity) where TPurpose : class;
