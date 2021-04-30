@@ -54,22 +54,22 @@ namespace Pug.Tensible
 
 		public TPurpose GetEffectiveSettings<TEntity, TPurpose>(TEntity entity) where TPurpose : class
 		{
-			return GetEffectiveSettings<TEntity, TPurpose>(typeof(TPurpose).FullName, typeof(TPurpose).FullName, entity);
+			return GetEffectiveSettings<TEntity, TPurpose>(typeof(TEntity).FullName, typeof(TPurpose).FullName, entity);
 		}
 
 		public TPurpose GetEffectiveSettings<TEntity, TPurpose>(string purpose, TEntity entity) where TPurpose : class
 		{
-			return GetEffectiveSettings<TEntity, TPurpose>(typeof(TPurpose).FullName, purpose, entity);
+			return GetEffectiveSettings<TEntity, TPurpose>(typeof(TEntity).FullName, purpose, entity);
 		}
 		
 		public TPurpose GetSettings<TEntity, TPurpose>(TEntity entity) where TPurpose : class
 		{
-			return GetSettings<TEntity, TPurpose>(typeof(TPurpose).FullName, typeof(TPurpose).FullName, entity);
+			return GetSettings<TEntity, TPurpose>(typeof(TEntity).FullName, typeof(TPurpose).FullName, entity);
 		}
 
 		public TPurpose GetSettings<TEntity, TPurpose>(string purpose, TEntity entity) where TPurpose : class
 		{
-			return GetSettings<TEntity, TPurpose>(typeof(TPurpose).FullName, purpose, entity);
+			return GetSettings<TEntity, TPurpose>(typeof(TEntity).FullName, purpose, entity);
 		}
 	}
 }
