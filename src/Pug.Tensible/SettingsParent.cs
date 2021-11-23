@@ -23,7 +23,6 @@ namespace Pug.Tensible
 		public TPurpose MapTo(TEntity entity, TPurpose settings, IServiceProvider serviceProvider)
 		{
 			if(entity == null) throw new ArgumentNullException(nameof(entity));
-			if(settings == null) throw new ArgumentNullException(nameof(settings));
 			
 			return _mapper(entity, settings, serviceProvider);
 		}

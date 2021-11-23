@@ -1,0 +1,41 @@
+﻿name: Run .NET Core develop branch test
+
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  BuildConfiguration: debug
+  CommonProject: src/Pug.Tensible.Common/Pug.Tensible.Common.csproj
+  MainProject: src/Pug.Tensible/Pug.Tensible.csproj
+
+jobs:
+  build:
+    name: Build projects
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.x'
+          source-url: https://nuget.pkg.github.com/Pug.Tensible/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Build Common project
+        run: dotnet build --nologo --configuration ${{env.BuildConfiguration}} ${{env.CommonProject}}
+
+      - name: Build Main project
+        run: dotnet build --nologo --configuration ${{env.BuildConfiguration}} ${{env.MainProject}}
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
