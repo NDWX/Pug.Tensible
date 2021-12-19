@@ -3,7 +3,7 @@
 namespace Settings
 {
 	[Flags]
-	public enum SettingValueSourceType
+	public enum SettingValueSourceTypes
 	{
 		/// <summary>
 		/// Value of effective setting was obtained from default value specified in <see cref="Schema.SettingDefinition">SettingDefinition</see>
