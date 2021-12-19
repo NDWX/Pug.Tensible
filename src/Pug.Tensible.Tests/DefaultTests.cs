@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.CodeAnalysis;
@@ -134,20 +135,6 @@ namespace Pug.Tensible.Tests
 		{
 			context.Unified = context.Unifier.Unify();
 		}
-		/*
-		[Theory]
-		[Order(60)]
-		[InlineData("FirstType", "FirstEntity", "Purpose1", "Setting5")]
-		[InlineData("FirstType", "FirstEntity", "Purpose2", "Setting1")]
-		public void ShouldErrorIfUnknownSettingRequested(string type, string identifier, string purpose, string name)
-		{
-			Assert.Throws<UnknownSetting>(
-					() => context.SettingsResolver.ResolveSetting(
-						new EntityIdentifier {Identifier = identifier, Type = type},
-						purpose,
-						name)
-				);
-		}*/
 
 	}
 }
