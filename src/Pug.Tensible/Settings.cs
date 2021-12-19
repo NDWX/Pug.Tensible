@@ -8,11 +8,8 @@ namespace Pug.Tensible
 		where TEntity : class
 		where TSettings : class
 	{
-		/*private readonly LinkedList<Func<string, TPurpose, TPurpose>> parentSettingsMapper =
-			new LinkedList<Func<string, TPurpose, TPurpose>>();*/
-
 		private readonly List<string> parentEntities = new List<string>();
-		private readonly List<SettingsParent<TEntity, TSettings>> parentSettings =
+		private readonly List<SettingsParent<TEntity, TSettings>> _parentSettings =
 			new List<SettingsParent<TEntity, TSettings>>();
 
 		public IEnumerable<string> ParentEntities => parentEntities;
@@ -55,7 +52,7 @@ namespace Pug.Tensible
 				return baseSettings;
 			};
 
-			parentSettings.Add(
+			_parentSettings.Add(
 					new SettingsParent<TEntity, TSettings>(parentEntityType, parentSettingsPurposeName, lambda)
 				);
 				
@@ -78,70 +75,6 @@ namespace Pug.Tensible
 
 			AddSettingsParent(
 				parentEntityType, parentSettingsPurposeName, entityParentMapper, parentSettingsAccessor, settingsMap);
-
-			/*
-			ParameterExpression entityParameterExpression =
-				Expression.Parameter(typeof(TEntity), "entity");
-			ParameterExpression entitySettingsParameterExpression =
-				Expression.Parameter(typeof(TPurpose), "baseSettings");
-			ParameterExpression serviceProviderParameterExpression =
-				Expression.Parameter(typeof(IServiceProvider), "serviceProvider");
-
-			ParameterExpression parentEntityVariableExpression = Expression.Variable(typeof(TParentEntity), "parentEntity");
-			LabelTarget returnTargetExpression = Expression.Label(typeof(TPurpose));
-			ParameterExpression parentSettingsVariableExpression =
-				Expression.Variable(typeof(TParentSettings), "parentSettings");
-			
-			parentSettings.Add(
-					new SettingsParent<TEntity, TPurpose>(
-							parentEntityType, parentSettingsPurposeName,
-							// Func<string, TPurpose, TPurpose> lambda = (entity, baseSettings) =>
-							Expression.Lambda<Func<TEntity, TPurpose, IServiceProvider, TPurpose>>(
-									// {
-									Expression.Block(
-											// TParentEntity parentEntity = entityParentMapper(entity, serviceProvider);
-											Expression.Assign(
-													parentEntityVariableExpression,
-													Expression.Call(entityParentMapper.Method, entityParameterExpression, serviceProviderParameterExpression)
-													),
-											// TParentPurpose parentSettings;
-											parentSettingsVariableExpression,
-											// parentSettings = settingsAccessor(parentEntity, serviceProvider);
-											Expression.Assign(
-													parentSettingsVariableExpression,
-													Expression.Call(settingsAccessor.Method,
-																	parentEntityVariableExpression,
-																	serviceProviderParameterExpression)
-												),
-											// if(parentSettings != null) return settingsMap(purpose, parentSettings);
-											Expression.IfThen(
-													// (parentSettings != null)
-													Expression.NotEqual(
-														parentSettingsVariableExpression,
-														Expression.Constant(null)),
-													//return settingsMap(purpose, parentSettings, serviceProvider);
-													Expression.Return(
-															returnTargetExpression,
-															Expression.Call(
-																settingsMap.Method,
-																entitySettingsParameterExpression,
-																parentSettingsVariableExpression,
-																serviceProviderParameterExpression)
-														)
-												),
-											// return purpose;
-											Expression.Return(
-												returnTargetExpression,
-												entitySettingsParameterExpression)
-											// }
-										), // Expression.Block
-									entityParameterExpression,
-									entitySettingsParameterExpression,
-									serviceProviderParameterExpression
-								).Compile()
-						) // new SettingsParent<TPurpose>
-				); // parentSettingsMapper.AddLast
-*/
 
 			return this;
 		}
@@ -186,7 +119,7 @@ namespace Pug.Tensible
 				return baseSettings;
 			};
 
-			parentSettings.Add(
+			_parentSettings.Add(
 					new SettingsParent<TEntity, TSettings>(parentEntityType, parentSettingsPurposeName, lambda)
 				);
 				
@@ -203,6 +136,7 @@ namespace Pug.Tensible
 			if(parentSettingsPurposeName == null) throw new ArgumentNullException(nameof(parentSettingsPurposeName));
 			if(parentSettingsAccessor == null) throw new ArgumentNullException(nameof(parentSettingsAccessor));
 			if(settingsMap == null) throw new ArgumentNullException(nameof(settingsMap));
+			
 			if(string.IsNullOrWhiteSpace(parentEntityType))
 				throw new ArgumentException("Value cannot be null or whitespace.", nameof(parentEntityType));
 
@@ -212,13 +146,13 @@ namespace Pug.Tensible
 			return this;
 		}
 
-		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
+		public ISettings<TEntity, TSettings> BasedOn<TParentSettings>(
 			string parentEntityType,
 			Func<TEntity, IServiceProvider, TParentSettings> parentSettingsAccessor,
 			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
 		)
 		{
-			return BasedOn<TParentSettings>(parentEntityType, typeof(TParentSettings).FullName, 
+			return BasedOn(parentEntityType, typeof(TParentSettings).FullName, 
 															parentSettingsAccessor, settingsMap);
 		}
 
@@ -300,22 +234,6 @@ namespace Pug.Tensible
 
 			return this;
 		}
-
-		/*
-		public SettingsDefinition<TSettings> BasedOn<TParentSettings>(
-			string parentEntityType,
-			string parentSettingsPurposeName,
-			Func<TSettings, TParentSettings, IServiceProvider, TSettings> settingsMap
-		)
-		{
-			return BasedOn(
-					parentEntityType,
-					parentSettingsPurposeName,
-					(entityIdentifier, serviceProvider) => (serviceProvider.GetService(typeof(IUnified)) as IUnified).GetEffectiveSettings<TParentSettings>(parentEntityType, parentSettingsPurposeName, )
-				);
-		}
-		
-		*/
 
 		public ISettings<TEntity, TSettings> BasedOn<TParentEntity, TParentSettings>(
 			string parentEntityType,
@@ -411,7 +329,7 @@ namespace Pug.Tensible
 		
 		ISettingsResolver ISettingsDefinition.GetResolver(IEntityDefinition entityDefinition)
 		{
-			return new SettingsResolver<TEntity, TSettings>(this, SettingsAccessor, parentSettings);
+			return new SettingsResolver<TEntity, TSettings>(this, SettingsAccessor, _parentSettings);
 		}
 	}
 }

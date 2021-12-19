@@ -9,7 +9,7 @@ namespace Pug.Tensible
 {
 	internal class Unified : IUnified
 	{
-		private IDictionary<string, IDictionary<string, ISettingsResolver>> entityTypes = null;
+		private readonly IDictionary<string, IDictionary<string, ISettingsResolver>> entityTypes = null;
 		private readonly IServiceProvider _serviceProvider;
 
 		private static void ValidateSettingsCriteria<TEntity>(string entityType, string purpose, TEntity entity)
@@ -30,10 +30,10 @@ namespace Pug.Tensible
 		ISettingsResolver GetResolver(string entityType, string purpose)
 		{
 			if(!entityTypes.TryGetValue(entityType, out IDictionary<string, ISettingsResolver> entitySettings))
-				throw new UnknownEntityType();
+				throw new UnknownEntityTypeException();
 			
 			if( !entitySettings.TryGetValue(purpose, out ISettingsResolver settings))
-				throw new UnknownPurpose();
+				throw new UnknownPurposeException();
 
 			return settings;
 		}

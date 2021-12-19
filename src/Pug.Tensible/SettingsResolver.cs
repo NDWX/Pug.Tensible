@@ -33,11 +33,11 @@ namespace Pug.Tensible
 					$"Settings '{Definition.Name}' is of type '{settingsType.FullName}', but '{expectedSettingsType.FullName}' is expected.");
 		}
 		
-		TSettingsPurpose ISettingsResolver.Get<TEntityType, TSettingsPurpose>(TEntityType entityIdentifier, IServiceProvider serviceProvider)
+		TSettingsPurpose ISettingsResolver.Get<TEntityType, TSettingsPurpose>(TEntityType entity, IServiceProvider serviceProvider)
 		{
-			ValidateSettingsRetrievalCriteria<TEntityType, TSettingsPurpose>(entityIdentifier);
+			ValidateSettingsRetrievalCriteria<TEntityType, TSettingsPurpose>(entity);
 
-			return _settingsAccessor(entityIdentifier as TEntity, serviceProvider) as TSettingsPurpose;
+			return _settingsAccessor(entity as TEntity, serviceProvider) as TSettingsPurpose;
 		}
 
 		TSettingsPurpose ISettingsResolver.GetEffective<TEntityType, TSettingsPurpose>(TEntityType entity, IServiceProvider serviceProvider)

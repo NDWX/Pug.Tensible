@@ -6,7 +6,7 @@ Simplify settings management and consumption in your application by declaring ru
 Report bugs or feature requests by creating new [issue](https://github.com/NDWX/Pug.Tensible/issues).
 
 
-[![develop branch build](https://github.com/NDWX/Pug.Tensible/actions/workflows/develop.yml/badge.svg)](https://github.com/NDWX/Pug.Tensible/actions/workflows/develop.yml)
+[![develop branch](https://github.com/NDWX/Pug.Tensible/actions/workflows/develop.yml/badge.svg)](https://github.com/NDWX/Pug.Tensible/actions/workflows/develop.yml)
 
 [![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=NDWX_Pug.Tensible&metric=ncloc)](https://sonarcloud.io/summary/new_code?id=NDWX_Pug.Tensible) [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=NDWX_Pug.Tensible&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=NDWX_Pug.Tensible) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=NDWX_Pug.Tensible&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=NDWX_Pug.Tensible)
 

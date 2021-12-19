@@ -8,7 +8,7 @@ namespace Pug.Tensible
 	internal class Entity<TEntity> : IEntity<TEntity>, IEntityDefinition
 		where TEntity : class
 	{
-		private Dictionary<string, ISettingsDefinition> _settings = new Dictionary<string, ISettingsDefinition>();
+		private readonly Dictionary<string, ISettingsDefinition> _settings = new Dictionary<string, ISettingsDefinition>();
 
 		public Entity(string name)
 		{
