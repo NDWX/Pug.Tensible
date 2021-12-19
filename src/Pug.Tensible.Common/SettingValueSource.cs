@@ -5,7 +5,7 @@
 	/// </summary>
 	public class SettingValueSource
 	{
-		public SettingValueSource(SettingValueSourceType type, EntityIdentifier entity, SettingValueSource source = null)
+		public SettingValueSource(SettingValueSourceTypes type, EntityIdentifier entity, SettingValueSource source = null)
 		{
 			this.Type = type;
 			this.Entity = entity;
@@ -15,7 +15,7 @@
 		/// <summary>
 		/// Source type
 		/// </summary>
-		public SettingValueSourceType Type { get;  }
+		public SettingValueSourceTypes Type { get;  }
 		
 		/// <summary>
 		/// The entity from which effective setting value is obtained
