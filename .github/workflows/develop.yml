@@ -1,4 +1,4 @@
-﻿name: Run .NET Core develop branch build
+﻿name: develop build
 
 on:
   push:
