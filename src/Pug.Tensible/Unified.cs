@@ -42,14 +42,14 @@ namespace Pug.Tensible
 		{
 			ValidateSettingsCriteria(entityType, purpose, entity);
 
-			return GetResolver(entityType, purpose).GetEffective<TEntity, TPurpose>(entity, _serviceProvider) as TPurpose;
+			return GetResolver(entityType, purpose).GetEffective<TEntity, TPurpose>(entity, _serviceProvider);
 		}
 		
 		public TPurpose GetSettings<TEntity, TPurpose>(string entityType, string purpose, TEntity entity) where TPurpose : class
 		{
 			ValidateSettingsCriteria(entityType, purpose, entity);
 			
-			return GetResolver(entityType, purpose).Get<TEntity, TPurpose>(entity, _serviceProvider) as TPurpose;
+			return GetResolver(entityType, purpose).Get<TEntity, TPurpose>(entity, _serviceProvider);
 		}
 
 		public TPurpose GetEffectiveSettings<TEntity, TPurpose>(TEntity entity) where TPurpose : class

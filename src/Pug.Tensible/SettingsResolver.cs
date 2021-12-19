@@ -25,7 +25,6 @@ namespace Pug.Tensible
 		{
 			if(entity == null) throw new ArgumentNullException(nameof(entity));
 
-			Type expectedEntityTYpe = typeof(TEntityType);
 			Type expectedSettingsType = typeof(TSettingsPurpose);
 
 			if(expectedSettingsType != settingsType)
